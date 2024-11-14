@@ -1,0 +1,134 @@
+LAMMPS (29 Aug 2024 - Development - patch_29Aug2024-453-g5b9cae1af4)
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:98)
+  using 1 OpenMP thread(s) per MPI task
+variable latparam equal 4.05
+variable s equal 30
+
+units metal
+dimension 3
+boundary p p p
+atom_style atomic
+
+lattice  fcc ${latparam} orient x 1 0 0 orient y 0 1 0 orient z 0 0 1
+lattice  fcc 4.05 orient x 1 0 0 orient y 0 1 0 orient z 0 0 1
+Lattice spacing in x,y,z = 4.05 4.05 4.05
+region whole block 0 ${s} 0 ${s} 0 ${s}
+region whole block 0 30 0 ${s} 0 ${s}
+region whole block 0 30 0 30 0 ${s}
+region whole block 0 30 0 30 0 30
+create_box 1 whole
+Created orthogonal box = (0 0 0) to (121.5 121.5 121.5)
+  1 by 1 by 1 MPI processor grid
+create_atoms 1 region whole
+Created 108000 atoms
+  using lattice units in orthogonal box = (0 0 0) to (121.5 121.5 121.5)
+  create_atoms CPU = 0.009 seconds
+
+mass 1 26.981 # Al
+
+######################################
+pair_style grace padding 0.01 pad_verbose
+[GRACE] TF version: 2.15.1
+[GRACE] Neighbour padding is ON, padding fraction: 0.01, max padding fraction before reduction: 0.2, max number of reduction(s): 10
+pair_coeff * * ../1-fit/seed/1/saved_model/  Al
+[GRACE] Loading ../1-fit/seed/1/saved_model/
+[GRACE] Model loaded
+[GRACE] Mapping LAMMPS atom type #1(Al) -> ACE species type #0
+
+######################################
+# EQUILIBRATION
+reset_timestep 0
+timestep 0.001
+velocity all create 300 12345 mom yes rot no
+fix 1 all npt temp 300 300 1 iso 0 0 1
+
+# Set thermo output
+thermo 10
+thermo_style custom step pe ke temp vol press
+run 20
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7
+  binsize = 3.5, bins = 35 35 35
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair grace, perpetual
+      attributes: full, newton on
+      pair build: full/bin/atomonly
+      stencil: full/bin/3d
+      bin: standard
+[GRACE] Atoms padding: new num. of atoms = 109080 (incl. 0.990% fake atoms)
+[GRACE] Neighbours padding: extending new num. of neighbours = 4581360 (incl. 0.990% fake neighbours)
+Per MPI rank memory allocation (min/avg/max) = 61.64 | 61.64 | 61.64 Mbytes
+   Step         PotEng         KinEng          Temp          Volume         Press     
+         0  -404514.28      4187.9899      300            1793613.4     -3582.1639    
+        10  -403901.87      3575.2666      256.10854      1793261.8     -1730.3906    
+[GRACE] Neighbours padding: reducing new num. of neighbours = 3792562
+        20  -402493.19      2167.4803      155.26401      1792581.3      2404.9092    
+Loop time of 36.3198 on 1 procs for 20 steps with 108000 atoms
+
+Performance: 0.048 ns/day, 504.442 hours/ns, 0.551 timesteps/s, 59.472 katom-step/s
+96.8% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 36.22      | 36.22      | 36.22      |   0.0 | 99.73
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0.0094823  | 0.0094823  | 0.0094823  |   0.0 |  0.03
+Output  | 0.00085899 | 0.00085899 | 0.00085899 |   0.0 |  0.00
+Modify  | 0.076267   | 0.076267   | 0.076267   |   0.0 |  0.21
+Other   |            | 0.0128     |            |       |  0.04
+
+Nlocal:         108000 ave      108000 max      108000 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:          42381 ave       42381 max       42381 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:    8.424e+06 ave   8.424e+06 max   8.424e+06 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 8424000
+Ave neighs/atom = 78
+Neighbor list builds = 0
+Dangerous builds = 0
+
+run 20
+Per MPI rank memory allocation (min/avg/max) = 63.18 | 63.18 | 63.18 Mbytes
+   Step         PotEng         KinEng          Temp          Volume         Press     
+        20  -402493.19      2167.4803      155.26401      1792581.3      2404.9092    
+        30  -401332.63      1007.9396      72.202148      1792404.3      5599.4513    
+        40  -401176.06      847.82279      60.732438      1793372.2      5699.5954    
+Loop time of 24.0177 on 1 procs for 20 steps with 108000 atoms
+
+Performance: 0.072 ns/day, 333.579 hours/ns, 0.833 timesteps/s, 89.934 katom-step/s
+100.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 23.93      | 23.93      | 23.93      |   0.0 | 99.64
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0.0072207  | 0.0072207  | 0.0072207  |   0.0 |  0.03
+Output  | 0.00085319 | 0.00085319 | 0.00085319 |   0.0 |  0.00
+Modify  | 0.070065   | 0.070065   | 0.070065   |   0.0 |  0.29
+Other   |            | 0.00926    |            |       |  0.04
+
+Nlocal:         108000 ave      108000 max      108000 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:          42381 ave       42381 max       42381 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:  8.79401e+06 ave 8.79401e+06 max 8.79401e+06 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 8794010
+Ave neighs/atom = 81.426019
+Neighbor list builds = 0
+Dangerous builds = 0
+unfix 1
+[GRACE:debug, proc #0]: Data preparation timer: 7.10191e+06 mcs, graph execution time: 6.82201e+07 mcs, data preparation time fraction: 9.43 %
+Total wall time: 0:01:17
