@@ -7,12 +7,12 @@ atom_style	atomic
 variable 	dt equal 0.001
 
 #---------------- ATOM DEFINITION -------------------
-read_data	Ir_fcc_111_surf.lammps-data
+read_data	Au_fcc_111_surf.lammps-data
 
-mass 1 192.217 # Ir
+mass 1 197 # Au
 
 pair_style grace/fs extrapolation
-pair_coeff      * * ../../1-fit/seed/1/FS_model.yaml ../../1-fit/seed/1/FS_model.asi Ir
+pair_coeff      * * ../../1-fit/seed/1/FS_model.yaml ../../1-fit/seed/1/FS_model.asi Au
 
 neighbor	2.0 bin
 neigh_modify	delay 0 every 1 check yes
@@ -28,7 +28,7 @@ variable dump_skip equal "c_max_grace_gamma < 1.5"
 
 dump pace_dump all custom 50 extrapolative_structures.dump id type x y z f_grace_gamma
 dump_modify pace_dump skip v_dump_skip
-dump_modify pace_dump element Ir
+dump_modify pace_dump element Au
 
 variable max_pace_gamma equal c_max_grace_gamma
 fix extreme_extrapolation all halt 10 v_max_pace_gamma > 25
@@ -62,7 +62,7 @@ thermo_style custom step cpuremain temp pe fmax c_min_dist c_max_grace_gamma  pr
 thermo	50
 thermo_modify flush yes
 dump	mdmc_dump all custom 50 dump.mdmc.dump  id type element xu yu zu f_grace_gamma
-dump_modify mdmc_dump element Ir
+dump_modify mdmc_dump element Au
 
 
 run 5000
