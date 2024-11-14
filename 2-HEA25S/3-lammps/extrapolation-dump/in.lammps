@@ -1,0 +1,73 @@
+
+#-------------- INIT ---------------------
+units		metal
+dimension	3
+boundary 	p p p
+atom_style	atomic
+variable 	dt equal 0.001
+
+#---------------- ATOM DEFINITION -------------------
+read_data	Ir_fcc_111_surf.lammps-data
+
+mass 1 192.217 # Ir
+
+pair_style grace/fs extrapolation
+pair_coeff      * * ../FS_model.yaml ../FS_model.asi Ir
+
+neighbor	2.0 bin
+neigh_modify	delay 0 every 1 check yes
+
+# -------------------- min_dist --------------------
+compute dist all pair/local dist
+compute  min_dist all reduce  min c_dist inputs local
+
+fix grace_gamma all pair 50 grace/fs gamma 1
+compute max_grace_gamma all reduce max f_grace_gamma
+
+variable dump_skip equal "c_max_grace_gamma < 1.5"
+
+dump pace_dump all custom 50 extrapolative_structures.dump id type x y z f_grace_gamma
+dump_modify pace_dump skip v_dump_skip
+dump_modify pace_dump element Ir
+
+variable max_pace_gamma equal c_max_grace_gamma
+fix extreme_extrapolation all halt 10 v_max_pace_gamma > 25
+
+print "-------------- MINIMIZE  min_full ---------------------"
+
+#reset_timestep	0
+thermo_style custom step cpuremain temp pe  fmax c_min_dist c_max_grace_gamma  press vol
+thermo	50
+thermo_modify flush yes
+fix box_relax all box/relax aniso 0.0 vmax 0.05
+
+min_style cg
+minimize 0 1.0e-3 500 750
+
+unfix box_relax
+
+
+print "-------------- MDMC mdmc ---------------------"
+
+#reset_timestep	0
+timestep $(dt)
+
+# init T=2*T_target
+velocity all create 1000.0 321 mom yes rot yes dist gaussian
+
+# thermostat + barostat
+fix mdmc_npt all npt temp 500 5000 0.1 aniso 0 0 0.1
+
+thermo_style custom step cpuremain temp pe fmax c_min_dist c_max_grace_gamma  press vol pxx pyy pzz pxy pxz pyz
+thermo	50
+thermo_modify flush yes
+dump	mdmc_dump all custom 50 dump.mdmc.dump  id type element xu yu zu f_grace_gamma
+dump_modify mdmc_dump element Ir
+
+
+run 5000
+
+unfix mdmc_npt
+undump mdmc_dump
+
+
