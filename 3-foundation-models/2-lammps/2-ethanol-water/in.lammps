@@ -1,0 +1,77 @@
+
+#-------------- INIT ---------------------
+units		metal
+dimension	3
+boundary 	p p p
+atom_style	atomic
+variable 	dt equal 0.001
+variable    HOME_FOLDER getenv HOME
+#---------------- ATOM DEFINITION -------------------
+read_data	ethanol-water.lammps-data
+#replicate 2 2 2
+
+# ethanol
+mass 1 12  #  C
+mass 2 1  # H
+mass 3 15.999   # O
+
+# water: 4, 5 -> H, O
+mass 4 1  # H
+mass 5 15.999   # O
+
+pair_style grace pad_verbose padding 0.1
+pair_coeff * * ${HOME_FOLDER}/.cache/grace/MP-GRACE-1L-r6_4Nov2024 C H O H O
+#pair_coeff * * /home/users/lysogy36/storage/acefit/GRACE/MPTraj/snapshot_0510/1l_cheb_c6_s1/seed/42/saved_model C H O H O
+
+
+
+neighbor	2.0 bin
+neigh_modify	delay 0 every 1 check yes
+
+# -------------------- min_dist --------------------
+compute dist all pair/local dist
+compute  min_dist all reduce  min c_dist inputs local
+
+
+print "-------------- MINIMIZE  min_full ---------------------"
+
+#reset_timestep	0
+thermo_style custom step cpuremain temp pe density fmax c_min_dist press vol
+thermo	1
+thermo_modify flush yes
+fix box_relax all box/relax iso 0.0 vmax 0.05
+
+min_style cg
+minimize 0 1e-6 100 100
+
+unfix box_relax
+
+
+print "-------------- MD ---------------------"
+
+#reset_timestep	0
+timestep $(dt)
+
+# init T=2*T_target
+velocity all create 600.0 123 mom yes rot yes dist gaussian
+
+# thermostat + barostat
+fix 2 all npt temp 300 300 0.1 aniso 0 0 0.1
+
+# thermostat
+#fix 2 all nvt temp 300 300 0.1
+
+
+thermo_style custom step cpuremain temp pe density fmax c_min_dist  press vol pxx pyy pzz pxy pxz pyz
+thermo	10
+thermo_modify flush yes
+dump	mdmc_dump all custom 10 dump.mdmc.dump  id type element xu yu zu 
+dump_modify mdmc_dump element C H O H O
+
+
+run 10000
+
+unfix 2
+undump mdmc_dump
+
+
