@@ -14,7 +14,7 @@ create_atoms 1 region whole
 mass 1 26.981 # Al
 
 ######################################
-pair_style grace padding 0.01 pad_verbose
+pair_style grace pad_verbose
 pair_coeff * * ../1-fit/seed/1/saved_model/  Al
 
 ######################################
