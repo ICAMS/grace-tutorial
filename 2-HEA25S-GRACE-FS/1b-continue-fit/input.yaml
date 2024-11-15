@@ -2,7 +2,7 @@ seed: 1
 cutoff: 7.0
 
 data:
-  filename: ../data/bulk_random_train.pkl.gz
+  filename: ../0-data/bulk_random_train.pkl.gz
   test_size: 0.05
   reference_energy: 0
   # reference_energy: {Al: -1.23, Li: -3.56}
