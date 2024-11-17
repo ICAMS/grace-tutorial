@@ -47,7 +47,7 @@ minimize 0 1.0e-3 500 750
 unfix box_relax
 
 
-print "-------------- MDMC mdmc ---------------------"
+print "-------------- MD ---------------------"
 
 #reset_timestep	0
 timestep $(dt)
