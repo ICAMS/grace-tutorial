@@ -1,9 +1,15 @@
 
 #-------------- INIT ---------------------
 units		metal
+atom_style	atomic
+
+neighbor	0.1 bin
+neigh_modify	 every 1 delay 1 check yes
+
+
 dimension	3
 boundary 	p p p
-atom_style	atomic
+
 variable 	dt equal 0.001
 variable    HOME_FOLDER getenv HOME
 #---------------- ATOM DEFINITION -------------------
@@ -15,18 +21,10 @@ mass 1 12  #  C
 mass 2 1  # H
 mass 3 15.999   # O
 
-# water: 4, 5 -> H, O
-mass 4 1  # H
-mass 5 15.999   # O
-
 pair_style grace pad_verbose padding 0.1
-pair_coeff * * ${HOME_FOLDER}/.cache/grace/MP-GRACE-1L-r6_4Nov2024 C H O H O
-#pair_coeff * * /home/users/lysogy36/storage/acefit/GRACE/MPTraj/snapshot_0510/1l_cheb_c6_s1/seed/42/saved_model C H O H O
+pair_coeff * * ${HOME_FOLDER}/.cache/grace/MP-GRACE-1L-r6_4Nov2024 C H O
 
 
-
-neighbor	2.0 bin
-neigh_modify	delay 0 every 1 check yes
 
 # -------------------- min_dist --------------------
 compute dist all pair/local dist
@@ -66,7 +64,7 @@ thermo_style custom step cpuremain temp pe density fmax c_min_dist  press vol px
 thermo	10
 thermo_modify flush yes
 dump	mdmc_dump all custom 10 dump.mdmc.dump  id type element xu yu zu 
-dump_modify mdmc_dump element C H O H O
+dump_modify mdmc_dump element C H O
 
 
 run 10000
