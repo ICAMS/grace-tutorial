@@ -1,5 +1,5 @@
 variable latparam equal 4.05
-variable s equal 3 # max: 30 for A100
+variable s equal 2 # PUT HERE 30 FOR 108k atoms - max for A100 80Gb
 
 units metal
 dimension 3
