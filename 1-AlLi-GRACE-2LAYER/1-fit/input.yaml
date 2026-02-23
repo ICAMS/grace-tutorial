@@ -33,7 +33,7 @@ fit:
   
 
   maxiter: auto # Number of epochs / iterations. auto: ~50k updates (scratch) or ~10k (finetune)
-  target_total_updates: 5000 # alternative: specify total gradient updates instead of epochs
+  target_total_updates: 10000 # alternative: specify total gradient updates instead of epochs
   # Switch E/F loss weights mid-training: after_iter can be fraction (0.75 = 75% of maxiter) or int
   # learning_rate_reduction_factor: 0.1 → new LR = current_LR × factor  (preferred over absolute learning_rate)
 
@@ -63,8 +63,8 @@ fit:
   test_max_n_buckets: auto # same for test
   auto_bucket_max_padding: 0.3 # max allowed padding overhead for neighbours when using 'auto' buckets
 
-  checkpoint_freq: 10 # frequency for **REGULAR** checkpoints.
+  checkpoint_freq: 2 # frequency for **REGULAR** checkpoints.
   # save_all_regular_checkpoints: True # to store ALL regular checkpoints
-  progressbar: False # show batch-evaluation progress bar
+  progressbar: True # show batch-evaluation progress bar
   train_shuffle: True # shuffle train batches on every epoch
 
