@@ -15,7 +15,7 @@ mass 1 26.981 # Al
 
 ######################################
 pair_style grace pad_verbose
-pair_coeff * * ../1-fit/seed/1/saved_model/  Al
+pair_coeff * * ../1-fit/seed/1/final_model/  Al
 
 ######################################
 # EQUILIBRATION
