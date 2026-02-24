@@ -1,0 +1,84 @@
+
+#-------------- INIT ---------------------
+units		metal
+dimension	3
+boundary 	p p p
+atom_style	atomic
+variable 	dt equal 0.001
+
+#---------------- ATOM DEFINITION -------------------
+read_data	structure.lammps-data
+
+mass 1 26.9815385 # Al
+mass 2 6.94 # Li
+
+#---------------- FORCE FIELDS --------------------
+pair_style 	grace/fs extrapolation
+pair_coeff	* * /pc2/users/u/usrtr200/mlpfits-2026-grace/grace-tutorial-2026/3-foundation-models/3b-distillation/seed/1/saved_model.yaml /pc2/users/u/usrtr200/mlpfits-2026-grace/grace-tutorial-2026/3-foundation-models/3b-distillation/seed/1/saved_model.asi Al Li
+
+fix pace_gamma all pair 50 pace/extrapolation gamma 1
+compute max_pace_gamma all reduce max f_pace_gamma
+
+neighbor	2.0 bin
+neigh_modify	delay 0 every 1 check yes
+
+# -------------------- min_dist --------------------
+compute dist all pair/local dist
+compute  min_dist all reduce  min c_dist inputs local
+
+print "-------------- MINIMIZE  min_full ---------------------"
+fix pace_gamma all pair 100 grace/fs extrapolation gamma 1
+reset_timestep	0
+thermo_style custom step cpuremain pe  fmax c_min_dist c_max_pace_gamma  press vol density pxx pyy pzz pxy pxz pyz xy xz yz
+thermo	100
+thermo_modify flush yes
+dump	dump_relax all custom 100 dump.min_full.dump id type element xu yu zu f_pace_gamma
+dump_modify dump_relax element Al Li
+
+fix box_relax all box/relax aniso 0.0 vmax 0.001
+
+min_style cg
+minimize 0 1.0e-3 1000 1000
+
+undump dump_relax
+
+unfix box_relax
+
+write_data min_full.lammps-data
+
+fix fix_print all print 1 "$(pe)" file min_full.energy.dat
+run 0
+unfix fix_print
+
+
+print "-------------- MDMC mdmc ---------------------"
+fix pace_gamma all pair 250 grace/fs extrapolation gamma 1
+reset_timestep	0
+timestep $(dt)
+fix AlLi  all atom/swap 100 100 1021 300 ke yes types 1 2
+
+# thermostat + barostat
+fix mdmc_npt all npt temp 300 300 0.1 aniso 0 0 0.1
+
+thermo_style custom step cpuremain temp pe fmax c_min_dist f_AlLi[2] c_max_pace_gamma press vol density pxx pyy pzz pxy pxz pyz
+thermo	500
+thermo_modify flush yes
+dump	mdmc_dump all custom 500 dump.mdmc.dump  id type element xu yu zu f_pace_gamma
+dump_modify mdmc_dump element Al Li
+
+
+run 50000
+
+unfix AlLi
+
+unfix mdmc_npt
+undump mdmc_dump
+
+
+thermo_style custom step cpuremain temp pe fmax c_min_dist c_max_pace_gamma press vol density pxx pyy pzz pxy pxz pyz
+write_data mdmc.lammps-data
+
+fix fix_print all print 1 "$(pe)" file mdmc.energy.dat
+run 0
+unfix fix_print
+

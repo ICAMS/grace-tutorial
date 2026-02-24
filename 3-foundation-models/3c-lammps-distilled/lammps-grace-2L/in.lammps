@@ -1,0 +1,81 @@
+
+#-------------- INIT ---------------------
+units		metal
+dimension	3
+boundary 	p p p
+atom_style	atomic
+variable 	dt equal 0.001
+
+#---------------- ATOM DEFINITION -------------------
+read_data	structure.lammps-data
+
+mass 1 26.9815385 # Al
+mass 2 6.94 # Li
+
+pair_style grace
+
+pair_coeff      * * /pc2/users/u/usrtr200/mlpfits-2026-grace/grace-tutorial-2026/3-foundation-models/3a-finetuning/seed/1/final_model Al Li
+
+neighbor	2.0 bin
+neigh_modify	delay 0 every 1 check yes
+
+# -------------------- min_dist --------------------
+compute dist all pair/local dist
+compute  min_dist all reduce  min c_dist inputs local
+
+print "-------------- MINIMIZE  min_full ---------------------"
+
+reset_timestep	0
+thermo_style custom step cpuremain pe  fmax c_min_dist   press vol density pxx pyy pzz pxy pxz pyz xy xz yz
+thermo	100
+thermo_modify flush yes
+dump	dump_relax all custom 100 dump.min_full.dump id type element xu yu zu
+dump_modify dump_relax element Al Li
+
+fix box_relax all box/relax aniso 0.0 vmax 0.001
+
+min_style cg
+minimize 0 1.0e-3 1000 1000
+
+undump dump_relax
+
+unfix box_relax
+
+write_data min_full.lammps-data
+
+fix fix_print all print 1 "$(pe)" file min_full.energy.dat
+run 0
+unfix fix_print
+
+
+print "-------------- MDMC mdmc ---------------------"
+
+reset_timestep	0
+timestep $(dt)
+fix AlLi  all atom/swap 100 100 1021 300 ke yes types 1 2
+
+# thermostat + barostat
+fix mdmc_npt all npt temp 300 300 0.1 aniso 0 0 0.1
+
+thermo_style custom step cpuremain temp pe fmax c_min_dist f_AlLi[2]  press vol density pxx pyy pzz pxy pxz pyz
+thermo	500
+thermo_modify flush yes
+dump	mdmc_dump all custom 500 dump.mdmc.dump  id type element xu yu zu
+dump_modify mdmc_dump element Al Li
+
+
+run 50000
+
+unfix AlLi
+
+unfix mdmc_npt
+undump mdmc_dump
+
+
+thermo_style custom step cpuremain temp pe fmax c_min_dist  press vol density pxx pyy pzz pxy pxz pyz
+write_data mdmc.lammps-data
+
+fix fix_print all print 1 "$(pe)" file mdmc.energy.dat
+run 0
+unfix fix_print
+

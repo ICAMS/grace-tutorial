@@ -4,7 +4,7 @@
 #SBATCH -n 1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu 32GB
-#SBATCH -J "HEA25-kk"
+#SBATCH -J "dist-fs-lmp"
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a100:1
 
