@@ -1,4 +1,4 @@
-
+log log.lammps.cpu
 #-------------- INIT ---------------------
 units		metal
 dimension	3
