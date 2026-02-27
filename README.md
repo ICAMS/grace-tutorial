@@ -12,6 +12,12 @@ All materials for these tutorials are available on [GitHub](https://github.com/I
 git clone --depth=1 https://github.com/ICAMS/grace-tutorial
 ```  
 
+In order to activate GRACE environment do
+```bash
+cd
+source load_GRACE.sh
+```
+
 ## Tutorial 1: Parameterization of 2-layer GRACE for Al-Li
 
 
@@ -683,7 +689,3 @@ Next, submit the fit to the queue using `sbatch submit.sh`.
 
 After the fit is finished, you can use the model as shown in the `4-fit-tensors/1-vector/use_model.ipynb` notebook.
 
-
-## Further Reading
-
-* [Fitting Generic Tensor Properties](gen_tensor.md) — how to fit first- and second-rank tensor properties such as EFG, Born effective charges, or stress using the `TENSOR_1L`/`TENSOR_2L` presets.
