@@ -1,4 +1,4 @@
-
+log log.lammps.cpu
 #-------------- INIT ---------------------
 units		metal
 dimension	3
@@ -12,7 +12,7 @@ read_data	Au_fcc_111_surf.lammps-data
 mass 1 197 # Au
 
 pair_style grace/fs extrapolation
-pair_coeff      * * ../../1-fit/seed/1/FS_model.yaml ../../1-fit/seed/1/FS_model.asi Au
+pair_coeff      * * ../../1-fit/seed/1/saved_model.yaml ../../1-fit/seed/1/saved_model.asi Au
 
 neighbor	2.0 bin
 neigh_modify	delay 0 every 1 check yes

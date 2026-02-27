@@ -22,7 +22,7 @@ mass 2 1  # H
 mass 3 15.999   # O
 
 pair_style grace pad_verbose padding 0.1
-pair_coeff * * ${HOME_FOLDER}/.cache/grace/MP-GRACE-1L-r6_4Nov2024 C H O
+pair_coeff * * ${HOME_FOLDER}/.cache/grace/GRACE-2L-OMAT-large-ft-E C H O
 
 
 

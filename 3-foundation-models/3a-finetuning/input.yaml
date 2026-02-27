@@ -1,0 +1,61 @@
+seed: 1
+cutoff: n/a
+
+data:
+  filename: ../../1-AlLi-GRACE-2LAYER/0-data/collected.pkl.gz
+  test_size: 0.05
+  reference_energy: 0
+  # reference_energy: {Al: -1.23, Li: -3.56}
+  save_dataset: True
+  # stress_units: eV/A3 # eV/A3 (default) or GPa or kbar or -kbar
+
+
+potential:
+  # elements: [Cu, Al] # If elements not provided - determined automatically from data
+  finetune_foundation_model: GRACE-2L-OMAT-medium-ft-E
+
+  reduce_elements: True  # reduce to elements present in dataset
+fit:
+  loss: {
+    energy: { weight: 16, type: huber , delta: 0.01 },
+    forces: { weight: 32, type: huber , delta: 0.01 },
+    stress: { weight: 128.0, type: huber, delta: 0.01 },
+    switch: { after_iter: 0.75, learning_rate_reduction_factor: 0.1, energy: { weight: 128 }, forces: { weight: 32 }, stress: { weight: 128.0 }, }
+  }
+
+  
+
+  target_total_updates: 10000 # Number of total gradient updates
+  # Switch E/F loss weights mid-training: after_iter can be fraction (0.75 = 75% of maxiter) or int
+  # learning_rate_reduction_factor: 0.1 → new LR = current_LR × factor  (preferred over absolute learning_rate)
+
+  optimizer: Adam
+  opt_params: {
+            learning_rate: 0.001,
+            use_ema: True,
+            ema_momentum: 0.99,
+            weight_decay: null,
+            clipnorm: 1.0,
+        }
+
+  scheduler: reduce_on_plateau
+  scheduler_params: { "patience": 50, "reduction_factor": 0.8, "minimum_learning_rate": 8.333333333333333e-05, "stop_at_min": True }
+
+  ## needed for low-energy tier metrics and for "convex_hull"-based distance of energy-based weighting scheme
+  compute_convex_hull: False
+  batch_size: 16 # Important hyperparameter for Adam and irrelevant (but must be) for L-BFGS-B
+  test_batch_size: 64 # test batch size (optional)
+
+  jit_compile: True
+  eval_init_stats: True # to evaluate initial metrics
+  reset_epoch_and_step: False
+
+  train_max_n_buckets: auto # max number of buckets (group of batches of same shape) in train set
+  test_max_n_buckets: auto # same for test
+  auto_bucket_max_padding: 0.3 # max allowed padding overhead for neighbours when using 'auto' buckets
+
+  checkpoint_freq: 2 # frequency for **REGULAR** checkpoints.
+  # save_all_regular_checkpoints: True # to store ALL regular checkpoints
+  progressbar: True # show batch-evaluation progress bar
+  train_shuffle: True # shuffle train batches on every epoch
+

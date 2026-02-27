@@ -13,7 +13,7 @@ mass 1 58.6934  # Pt
 mass 2 15.999   # O
 
 pair_style grace pad_verbose
-pair_coeff * * ${HOME_FOLDER}/.cache/grace/MP-GRACE-2L-r6_29Aug2024 Pt O
+pair_coeff * * ${HOME_FOLDER}/.cache/grace/GRACE-2L-OMAT-large-ft-E Pt O
 
 
 neighbor	2.0 bin

@@ -1,5 +1,6 @@
+log log.serial
 variable latparam equal 4.05
-variable s equal 2 # PUT HERE 30 FOR 108k atoms - max for A100 80Gb
+variable s equal 10 # PUT HERE 30 FOR 108k atoms - max for A100 80Gb
 
 units metal
 dimension 3
@@ -15,7 +16,7 @@ mass 1 26.981 # Al
 
 ######################################
 pair_style grace pad_verbose
-pair_coeff * * ../1-fit/seed/1/saved_model/  Al
+pair_coeff * * ../1-fit/seed/1/final_model/  Al
 
 ######################################
 # EQUILIBRATION
