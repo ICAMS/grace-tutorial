@@ -15,7 +15,7 @@ git clone --depth=1 https://github.com/ICAMS/grace-tutorial
 In order to activate GRACE environment do
 ```bash
 cd
-source load_GRACE.sh
+source ~/load_GRACE.sh
 ```
 
 ## Tutorial 1: Parameterization of 2-layer GRACE for Al-Li
@@ -561,32 +561,46 @@ If not, you can export the model using the `gracemaker -r -s` command to the `se
 
 You can quickly validate the finetuned model in `3-foundation-models/3a-finetuning/validate.ipynb` notebook.
 
-#### Generating distilled data
+### Generating distilled data
 
 Now you can use the fine-tuned model to generate distilled reference data.
 See `3-foundation-models/3b-distillation/distill_data.ipynb` for details.
 This will create a `distilled_AlLi_dataset.pkl.gz` file.
 
-#### Training distilled model
+### Training distilled model
 
 Run `gracemaker` with `-t` flag to start interactive dialogue and select the following options:
 
 ```bash
+── Fit type
+? Fit type: fit from scratch
+
 ── Dataset
-? Training dataset file (e.g. data.pkl.gz): distilled_AlLi_dataset.pkl.gz
+  Tab ↹ autocompletes path  ·  ↑↓ navigates history
+? Training dataset file (e.g. data.pkl.gz): distilled_AlL
+i_dataset.pkl.gz
   ✓ Train file: distilled_AlLi_dataset.pkl.gz
 ? Use a separate test dataset file? No
 ? Test set fraction (split from train) 0.05
   ✓ Test fraction: 0.05
 
-── Model
-? Finetune a foundation model? No
+── Model Details
 ? Model preset: FS
   ✓ Preset: FS
 ? Model complexity: medium
   ✓ Complexity: medium
 ? Cutoff radius (Å) 7
   ✓ Cutoff: 7.0 Å
+
+── Optimizer
+  → FS from scratch: BFGS (full Hessian) is recommended for small/medium
+models.
+  → If your FS model has many parameters (large lmax/order), prefer 
+L-BFGS-B instead.
+? Optimizer: BFGS
+  ✓ Optimizer: BFGS
+  → Note: BFGS stores the full Hessian approximation — use only for 
+small/medium FS models.
 
 ── Loss function
 ? Loss type: huber
@@ -599,27 +613,20 @@ Run `gracemaker` with `-t` flag to start interactive dialogue and select the fol
 ? Include stress in the loss? Yes
 ? Stress loss weight 128.0
   ✓ Stress weight: 128.0
-? Switch E/F/S weights mid-training? Yes
-? Switch after (fraction 0-1, epoch number, or 'auto' = 0.75) 0.75
-? LR reduction factor at switch (new LR = current_LR × factor) 0.1
-? Energy weight after switch (was 16) 128
-? Force weight after switch (was 32) 32
-? Stress weight after switch (was 128.0) 128.0
+  → Loss-weight switching not supported for quasi-Newton optimizers.
 
 ── Weighting & batch size
 ? Sample weighting scheme: uniform
   ✓ Weighting: uniform
-? Batch size 32
+  → Batch size: less relevant for quasi-Newton (full dataset per step), 
+but must be specified.
+? Batch size 16
   ✓ Batch size: 32  (test: 128)
-
-```
-then set manually in `input.yaml` file in order to reduce training time:
-```yaml
-fit:
-  target_total_updates: 10000
+? Max iterations (epochs) 250
+  ✓ Total updates: 250
 ```
 
-and run the fit with `gracemaker input.yaml` or submit it to the cluster.
+Now you can submit fit to the queue `sbatch submit.sh` or run the fit with `gracemaker input.yaml` locally.
 
 After fit is finished, you can find the final model in `seed/1/final_model` folder.
 We also need to convert the model to GRACE/FS format. Go to `seed/1/` and run:
