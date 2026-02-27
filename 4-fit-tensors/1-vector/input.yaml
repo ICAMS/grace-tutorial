@@ -35,9 +35,11 @@ fit:
     }
   }
 
-  target_total_updates: 5000
+  target_total_updates: 10000
 
   optimizer: Adam
+  # opt_params: {learning_rate: 0.008, use_ema: True, ema_momentum: 0.99,
+  #              weight_decay: null, clipnorm: 1.0}
   opt_params: {learning_rate: 0.05, use_ema: True, ema_momentum: 0.5,
                weight_decay: null, clipnorm: 1.0}
   scheduler: cosine_decay
