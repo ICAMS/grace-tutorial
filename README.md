@@ -370,33 +370,10 @@ In order to continue the fit with **new** parameters, for example, add more weig
   ✓ Total updates: 10000
 ```
 
-* in the `input.yaml` file find and change following parameters:
-
-```yaml
-fit:
-  loss: {
-    energy: {weight: 5, type: huber, delta: 0.01},   # new energy weight
-    forces: {weight: 5, type: huber, delta: 0.01},   # new forces weight
-    stress: {weight: 0.1, type: huber, delta: 0.01}, # new stress weight
-  }
-
- # ...
-  opt_params: {
-      learning_rate: 0.001,  # reduce learning rate from 1e-2 -> 1e-3
-      # ...
-  }
-  
-  learning_rate_reduction: { ..., resume_lr: False} # overwrite learning_rate from checkpoint with new 1e-3 value
-
-```
-
-- Run `gracemaker` with the `-r` flag to read the previous best-test-loss checkpoint:  
-
-```bash
-gracemaker -r
+submit to the queue or run as usual `gracemaker`
 ```  
 
-**NOTE**: You can switch energy/forces/stress weights in the loss function during a single `gracemaker` run. To do this, you need to manually provide the `input.yaml::fit::loss::switch` option (see [here](../inputfile/#input-file-inputyaml) for more details) or provide a non-empty answer to the `Switch loss function E:F:S...` question in the `gracemaker -t` dialog. **Important**: `switch` only works with `scheduler: reduce_on_plateau` — `gracemaker -t` sets this automatically when switch is enabled, but if you configure `switch` manually, make sure to also set `scheduler: reduce_on_plateau` in your `input.yaml`.
+**NOTE**: You can switch energy/forces/stress weights in the loss function during a single `gracemaker` run. To do this, you need to manually provide the `input.yaml::fit::loss::switch` option (see [here](../inputfile/#input-file-inputyaml) for more details) or provide a non-empty answer to the `Switch loss function E:F:S...` question in the `gracemaker -t` dialog. 
 
 ### 2.2. Save/Export Model
 
