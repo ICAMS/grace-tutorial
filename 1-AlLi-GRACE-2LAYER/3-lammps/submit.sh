@@ -7,6 +7,7 @@
 #SBATCH -J "AlLi-2L-lammps"
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a100:1
+#SBATCH -A hpc-prf-mlpfits
 
 source /pc2/users/u/usrtr200/load_GRACE.sh 
 
@@ -18,5 +19,5 @@ nvidia-smi
 
 # Run your application here.
 # Below is an example to run the "Hello World" program with LIKWID.
-/pc2/users/u/usrtr200/mlpfits-2026-grace/soft/lammps/build/lmp -in in.lammps
-/pc2/users/u/usrtr200/mlpfits-2026-grace/soft/lammps/build/lmp -in in.lammps.chunked
+/pc2/groups/hpc-prf-mlpfits/GRACE/bin/lmp -in in.lammps
+/pc2/groups/hpc-prf-mlpfits/GRACE/bin/lmp -in in.lammps.chunked

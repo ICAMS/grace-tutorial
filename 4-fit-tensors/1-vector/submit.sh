@@ -4,7 +4,7 @@
 #SBATCH -n 1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem-per-cpu 3GB
-#SBATCH -J "HEA-FS"
+#SBATCH -J "TENSOR"
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a100:1
 #SBATCH -A hpc-prf-mlpfits
