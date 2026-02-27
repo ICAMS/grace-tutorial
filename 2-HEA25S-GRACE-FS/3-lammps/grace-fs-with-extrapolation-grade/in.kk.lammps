@@ -1,4 +1,4 @@
-log log.lammps.cpu
+log log.lammps.kk
 #-------------- INIT ---------------------
 units		metal
 dimension	3
@@ -26,7 +26,7 @@ compute max_grace_gamma all reduce max f_grace_gamma
 
 variable dump_skip equal "c_max_grace_gamma < 1.5"
 
-dump pace_dump all custom 50 extrapolative_structures.dump id type x y z f_grace_gamma
+dump pace_dump all custom 50 extrapolative_structures.kk.dump id type x y z f_grace_gamma
 dump_modify pace_dump skip v_dump_skip
 dump_modify pace_dump element Au
 
@@ -61,7 +61,7 @@ fix mdmc_npt all npt temp 500 5000 0.1 aniso 0 0 0.1
 thermo_style custom step cpuremain temp pe fmax c_min_dist c_max_grace_gamma  press vol pxx pyy pzz pxy pxz pyz
 thermo	50
 thermo_modify flush yes
-dump	mdmc_dump all custom 50 dump.mdmc.dump  id type element xu yu zu f_grace_gamma
+dump	mdmc_dump all custom 50 dump.mdmc.kk.dump  id type element xu yu zu f_grace_gamma
 dump_modify mdmc_dump element Au
 
 
