@@ -12,6 +12,12 @@ All materials for these tutorials are available on [GitHub](https://github.com/I
 git clone --depth=1 https://github.com/ICAMS/grace-tutorial
 ```  
 
+In order to activate GRACE environment do
+```bash
+cd
+source load_GRACE.sh
+```
+
 ## Tutorial 1: Parameterization of 2-layer GRACE for Al-Li
 
 
@@ -487,8 +493,8 @@ The usage of foundation models in LAMMPS is the same as for custom-parameterized
 * `3-foundation-models/2-lammps/2-ethanol-water`: Simulation of ethanol and water.
 
 You can submit simulation jobs to the queue with `sbatch submit.sh`
----
 
+---
 
 ## Tutorial 4: Fine-Tuning and distillation of  Foundation GRACE Models
 
@@ -552,6 +558,8 @@ After that, submit the job to the cluster with `sbatch submit.sh` or run `gracem
 
 After the training is finished, you can find the final model in the `seed/1/final_model` folder.
 If not, you can export the model using the `gracemaker -r -s` command to the `seed/1/saved_model` folder.
+
+You can quickly validate the finetuned model in `3-foundation-models/3a-finetuning/validate.ipynb` notebook.
 
 #### Generating distilled data
 
@@ -621,6 +629,63 @@ Then run `pace_activeset saved_model.yaml -d ../../distilled_AlLi_dataset.pkl.gz
 
 ---
 
-## Further Reading
 
-* [Fitting Generic Tensor Properties](gen_tensor.md) — how to fit first- and second-rank tensor properties such as EFG, Born effective charges, or stress using the `TENSOR_1L`/`TENSOR_2L` presets.
+## Tutorial 5. Learning vectorial/tensorial properties
+
+Navigate to the `4-fit-tensors/1-vector` directory and run `gracemaker -t`:
+
+```bash
+── Dataset
+  Tab ↹ autocompletes path  ·  ↑↓ navigates history
+? Training dataset file (e.g. data.pkl.gz): H2O_100.pkl.gz
+  ✓ Train file: H2O_100.pkl.gz
+? Use a separate test dataset file? No
+? Test set fraction (split from train) 0.05
+  ✓ Test fraction: 0.05
+
+── Tensor type
+? Tensor type: [1]       — First-rank vector (e.g. Forces as tensor)
+  ✓ Tensor components: [1]  rank=1
+
+── Per-structure
+? Property granularity: per-atom      — one tensor per atom  (e.g. EFG, BEC, for
+ces)
+  ✓ Per structure: False
+
+── Model
+? Model preset: TENSOR_1L — 1 message-passing layer, lighter (lmax=4, embedding=
+32)
+  ✓ Preset: TENSOR_1L
+? Cutoff radius (Å) 6.0
+  ✓ Cutoff: 6.0 Å
+
+── Energy & forces
+? Fit energy alongside tensor? No
+  ✓ Compute energy: False
+
+── Loss
+? Loss type: square
+  ✓ Loss type: square
+? Tensor loss weight 10.0
+  ✓ Tensor weight: 10.0
+
+── Batch & training
+? Batch size 10
+  ✓ Batch size: 10  (test: 50)
+? Target total updates 10000
+  ✓ Total updates: 10000
+
+```
+
+Then manually update the parameters in the `input.yaml` file to:
+```yaml
+fit:
+ #...
+ opt_params: {learning_rate: 0.05, use_ema: True, ema_momentum: 0.5,
+               weight_decay: null, clipnorm: 1.0}
+```
+
+Next, submit the fit to the queue using `sbatch submit.sh`.
+
+After the fit is finished, you can use the model as shown in the `4-fit-tensors/1-vector/use_model.ipynb` notebook.
+
