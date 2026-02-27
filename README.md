@@ -2,7 +2,7 @@
 
 ### Prerequisites  
 
-This tutorial is for MLPfits workshop, hosted in Noctua2 cluster of PC2 (Paderborn Center for Parallel Computing)
+This tutorial is for the MLPfits workshop, hosted on the Noctua2 cluster of PC2 (Paderborn Center for Parallel Computing)
 
 ### Tutorial Materials  
 
@@ -35,7 +35,7 @@ Now, let's collect DFT data recursively, by running
 grace_collect
 ```
 
-This will result in `collected.pkl.gz` file, that we will be used by `gracemaker`
+This will generate a `collected.pkl.gz` file that will be used by `gracemaker`
 
 ### 1.2. Parameterization
 
@@ -104,7 +104,7 @@ Please uncomment and set the line in order to reduce training time for this tuto
 
 #### 1.2.2. Run gracemaker
 
-Now, you can  submit fitting job to the queue with 
+Now you can submit the fitting job to the queue with 
 ```bash
 sbatch submit.sh
 ```
@@ -116,7 +116,7 @@ gracemaker
 
 During this process:  
 * **Preprocessing and Data Preparation**: Tasks such as building neighbor lists will be performed.  
-* **JIT Compilation**: The first epoch (or iteration) may take additional time due to JIT compilation for each training and testing bucket.  
+* **JIT Compilation**: The first epoch may take additional time due to JIT compilation for each training and testing bucket.  
 
 If you do not wish to wait, you can manually terminate the process: `Ctrl+Z` and `kill %1`  
 
@@ -126,7 +126,7 @@ To create multiple models for an ensemble, run additional parameterizations with
 sbatch submit-seed-2.sh
 sbatch submit-seed-3.sh
 ```
-or for local runs:
+Or for local runs:
 ```bash
 gracemaker --seed 2
 gracemaker --seed 3
@@ -162,11 +162,10 @@ To use the GRACE potential in SavedModel format, apply the following pair_style:
 pair_style grace pad_verbose
 pair_coeff * * ../1-fit/seed/1/saved_model/ Al
 ```  
-By default, this `pair_style` attempts to process the entire structure at once. However, for very large systems, this may result in Out-of-Memory (OOM) errors.
+By default, this `pair_style` attempts to process the entire structure at once. However, for very large systems, this may result in out-of-memory (OOM) errors.
 
 To prevent this, you can use the "chunked" versions of GRACE: `grace/1layer/chunk` or `grace/2layer/chunk`. These options process the structure in fixed-size pieces (chunks) that can be tuned to fit your GPU memory:
 
-or 
 ```bash
 pair_style grace/2layer/chunk chunksize 4096 
 pair_coeff * * ../1-fit/seed/1/saved_model/ Al
@@ -190,12 +189,12 @@ lmp -in in.lammps
 lmp -in in.lammps.chunked
 ```
 
-in order to compare the normal and chunked versions of the GRACE-2L models.
+to compare the normal and chunked versions of the GRACE-2L models.
 
 ### Simulation Details  
 
 - The simulation will first run for **20 steps** to JIT-compile the model.  
-- Then, it will run for another **20 steps** to measure execution time.  
+- Then it will run for another **20 steps** to measure execution time.  
 
 For example, on an A100 GPU, one of the final output lines might be:  
 
@@ -209,8 +208,8 @@ This indicates that the current model (GRACE-2LAYER, small) achieves a performan
 
 ## Tutorial 2. Parameterization of GRACE/FS for high entropy alloy HEA25S dataset
 
-Dataset for this tutorial was taken from
-["Surface segregation in high-entropy alloys from alchemical machine learning: dataset HEA25S"](https://iopscience.iop.org/article/10.1088/2515-7639/ad2983) paper.
+The dataset for this tutorial was taken from
+the paper ["Surface segregation in high-entropy alloys from alchemical machine learning: dataset HEA25S"](https://iopscience.iop.org/article/10.1088/2515-7639/ad2983).
 
 All tutorial materials can be found in `grace-tutorial/2-HEA25S-GRACE-FS/`:
 
@@ -220,10 +219,10 @@ cd grace-tutorial/2-HEA25S-GRACE-FS/
 
 ### (optional) Dataset conversion from extxyz format
 
-You can download complete dataset from [Materials Cloud](https://archive.materialscloud.org/record/2024.43) in an _extxyz_ format.
+You can download the complete dataset from [Materials Cloud](https://archive.materialscloud.org/record/2024.43) in _extxyz_ format.
 
-* Download `data.zip` file (in browser)
-* Unpack the `data.zip`, go to any(all) subfolders and convert the _extxyz_ dataset with `extxyz2df`:
+* Download the `data.zip` file (in browser)
+* Unpack the `data.zip`, go to any (or all) subfolders and convert the _extxyz_ dataset with `extxyz2df`:
 
 ```bash
 unzip data.zip
@@ -231,8 +230,8 @@ cd data/dataset_O_bulk_random
 extxyz2df bulk_random_train.xyz
 ```
 
-As a result, you will get compressed pandas DataFrame (`bulk_random_train.pkl.gz`).
-Same procedure can be repeated for other files.
+As a result, you will get a compressed pandas DataFrame (`bulk_random_train.pkl.gz`).
+The same procedure can be repeated for other files.
 
 ### 2.1. Parameterization
 
@@ -300,29 +299,30 @@ You have to enter following information:
 
 #### 2.1.2. Run `gracemaker`
 
-Now, you can run the model parameterization with:  
-Submit job to the queue
+Now you can run the model parameterization with one of the following options.
+
+Submit job to the queue:
 ```bash
 sbatch submit.sh
 ```
 
-or run locally
+Or run locally:
 
 ```bash
 gracemaker input.yaml
 ```  
 
-During the run, you may notice multiple warning messages starting with `ptxas warning:` or similar. These messages indicate that JIT compilation is occurring for each training and testing bucket, and they are normal. They will disappear after the first iteration/epoch.  
+During the run, you may notice multiple warning messages starting with `ptxas warning:` or similar. These messages indicate that JIT compilation is occurring for each training and testing bucket, and they are normal. They will disappear after the first iteration or epoch.  
 
 If you prefer, you can [reduce](../faq/#how-to-reduce-tensorflow-verbosity-level) the verbosity level of TensorFlow to minimize these messages.  
 
 #### 2.1.3. (optional) Manual continuation of the fit with new loss function (TODO: update)
 
-In order to continue the fit with **new** parameters, for example, add more weight onto energy in the loss function, do following steps:
+To continue the fit with **new** parameters, for example, to add more weight to energy in the loss function, take the following steps:
 
 * create new folder and run `gracemaker -t`:
 
-```
+```bash
 ── Fit type
 ? Fit type: continue fit
 
@@ -370,15 +370,13 @@ In order to continue the fit with **new** parameters, for example, add more weig
   ✓ Total updates: 10000
 ```
 
-submit to the queue or run as usual `gracemaker`
-```  
+submit to the queue or run as usual with `gracemaker`.
 
-**NOTE**: You can switch energy/forces/stress weights in the loss function during a single `gracemaker` run. To do this, you need to manually provide the `input.yaml::fit::loss::switch` option (see [here](../inputfile/#input-file-inputyaml) for more details) or provide a non-empty answer to the `Switch loss function E:F:S...` question in the `gracemaker -t` dialog. 
+**Note**: You can switch energy/forces/stress weights in the loss function during a single `gracemaker` run. To do this, you need to manually provide the `input.yaml::fit::loss::switch` option (see [here](../inputfile/#input-file-inputyaml) for more details) or provide a non-empty answer to the `Switch loss function E:F:S...` question in the `gracemaker -t` dialog. 
 
 ### 2.2. Save/Export Model
 
-To export the model into both TensorFlow's SavedModel and GRACE/FS YAML formats, run:  
-in the `2-HEA25S-GRACE-FS/1-fit` folder run
+To export the model into both TensorFlow's SavedModel and GRACE/FS YAML formats, navigate to `2-HEA25S-GRACE-FS/1-fit` and run:
 
 ```bash
 gracemaker -r -s -sf
@@ -405,7 +403,7 @@ Please refer to the Jupyter notebook `2-HEA25S-GRACE-FS/HEA25-GRACE-FS.ipynb` fo
 
 You need to compile LAMMPS with GRACE/FS and KOKKOS (see [here](../install/#lammps-with-grace) for instructions).  
 
-Go to the  `cd 3-lammps/grace-fs-with-extrapolation-grade/` and submit to the queue
+Navigate to `3-lammps/grace-fs-with-extrapolation-grade/` and submit to the queue:
 ```bash
 sbatch submit.sh  # for CPU
 sbatch submit_kk.sh  # for GPU/KOKKOS acceleration
@@ -423,14 +421,14 @@ for GPU:
 Performance: 42.786 ns/day, 0.561 hours/ns, 495.213 timesteps/s, 19.809 katom-step/s
 ```
 
-In this simulation, the small FCC(111) surface slab will be run under NPT conditions with an increasing temperature from 500K to 5000K. The extrapolation grade will be computed for each atom, and the configuration will be saved to `extrapolative_structures.dump` if the max gamma > 1.5.
+In this simulation, a small FCC(111) surface slab runs under NPT conditions with an increasing temperature from 500K to 5000K. The extrapolation grade is computed for each atom, and the configuration is saved to `extrapolative_structures.dump` if the maximum gamma > 1.5.
 
 To select the most representative structures for DFT calculations based on D-optimality, use the `pace_select` utility:  
 
 ```bash
 pace_select extrapolative_structures.dump  -p ../../1-fit/seed/1/saved_model.yaml -a ../../1-fit/seed/1/saved_model.asi -e "Au"
 ``` 
-This will generate selected.pkl.gz file with calculations needed to be performed with DFT.
+This will generate a `selected.pkl.gz` file with calculations that need to be performed with DFT.
 Find more details [here](https://pacemaker.readthedocs.io/en/latest/pacemaker/utilities/#d-optimality_structure_selection).
 
 ---
@@ -461,7 +459,7 @@ To download all models at once, use:
 grace_models download all
 ```
 
-### 3.2. Usage in ASE
+### 3.2. Usage with ASE
 
 To load a model in ASE, use the following function:
 
@@ -488,20 +486,19 @@ The usage of foundation models in LAMMPS is the same as for custom-parameterized
 * `3-foundation-models/2-lammps/1-Pt-surface`: Simulation of an oxygen molecule on a Pt (100) surface.
 * `3-foundation-models/2-lammps/2-ethanol-water`: Simulation of ethanol and water.
 
-You can submit simulations jobs to the queue `sbatch submit.sh`
+You can submit simulation jobs to the queue with `sbatch submit.sh`
 ---
 
 
 ## Tutorial 4: Fine-Tuning and distillation of  Foundation GRACE Models
 
 
-### Finetuning  foundation model with a new dataset
+### Finetuning foundation models with a new dataset
 
-Navigate `cd 3-foundation-models/3a-finetuning` and 
-run `gracemaker` with `-t` flag to start interactive dialogue and select the following options:
+Navigate to `3-foundation-models/3a-finetuning` and 
+run `gracemaker` with the `-t` flag to start an interactive dialogue and select the following options:
 
 ```bash
-
 
 ── Fit type
 ? Fit type: finetune foundation model
@@ -551,16 +548,16 @@ data/collected.pkl.gz
   ✓ Total updates: 10000
 ```
 
-After that, submit the job to the cluster `sbatch submit.sh` or run `gracemaker`  locally.
+After that, submit the job to the cluster with `sbatch submit.sh` or run `gracemaker` locally.
 
-After the training is finished, you can find the final model in `seed/1/final_model` folder.
-If not, then you can export the model with `gracemarker -r -s` command to `seed/1/saved_model` folder.
+After the training is finished, you can find the final model in the `seed/1/final_model` folder.
+If not, you can export the model using the `gracemaker -r -s` command to the `seed/1/saved_model` folder.
 
 #### Generating distilled data
 
-Now, you can use finetuned model to generate distilled reference data.
-Check `3-foundation-models/3b-distillation/distill_data.ipynb`.
-This fill create `distilled_AlLi_dataset.pkl.gz` file.
+Now you can use the fine-tuned model to generate distilled reference data.
+See `3-foundation-models/3b-distillation/distill_data.ipynb` for details.
+This will create a `distilled_AlLi_dataset.pkl.gz` file.
 
 #### Training distilled model
 
@@ -617,10 +614,10 @@ fit:
 and run the fit with `gracemaker input.yaml` or submit it to the cluster.
 
 After fit is finished, you can find the final model in `seed/1/final_model` folder.
-We also need to convert model to grace/fs format. Go to `seed/1/` and run
+We also need to convert the model to GRACE/FS format. Go to `seed/1/` and run:
 `grace_utils -p model.yaml -c checkpoints/checkpoint.best_test_loss.index export -sf`.
-You will get `saved_model.yaml` file.
-Then run `pace_activeset saved_model.yaml -d ../../distilled_AlLi_dataset.pkl.gz` to generate active set.
+You will get the `saved_model.yaml` file.
+Then run `pace_activeset saved_model.yaml -d ../../distilled_AlLi_dataset.pkl.gz` to generate the active set.
 
 ---
 
