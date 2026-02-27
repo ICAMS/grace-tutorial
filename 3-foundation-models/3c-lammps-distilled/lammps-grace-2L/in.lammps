@@ -12,9 +12,9 @@ read_data	structure.lammps-data
 mass 1 26.9815385 # Al
 mass 2 6.94 # Li
 
-pair_style grace
+pair_style grace pair_forces
 
-pair_coeff      * * /pc2/users/u/usrtr200/mlpfits-2026-grace/grace-tutorial-2026/3-foundation-models/3a-finetuning/seed/1/final_model Al Li
+pair_coeff      * * /home/users/lysogy36/PycharmProjects/GITHUB/grace-tutorial-fresh/3-foundation-models/3a-finetuning/seed/1/final_model Al Li
 
 neighbor	2.0 bin
 neigh_modify	delay 0 every 1 check yes
@@ -22,28 +22,33 @@ neigh_modify	delay 0 every 1 check yes
 # -------------------- min_dist --------------------
 compute dist all pair/local dist
 compute  min_dist all reduce  min c_dist inputs local
+compute my_virial all centroid/stress/atom NULL virial
 
-print "-------------- MINIMIZE  min_full ---------------------"
+print "-------------- EQUILIBRATION eq ---------------------"
 
-reset_timestep	0
-thermo_style custom step cpuremain pe  fmax c_min_dist   press vol density pxx pyy pzz pxy pxz pyz xy xz yz
-thermo	100
+thermo_style custom step cpuremain temp pe c_min_dist fmax  press vol density pxx pyy pzz pxy pxz pyz
 thermo_modify flush yes
-dump	dump_relax all custom 100 dump.min_full.dump id type element xu yu zu
-dump_modify dump_relax element Al Li
+reset_timestep	0
+timestep $(dt)
 
-fix box_relax all box/relax aniso 0.0 vmax 0.001
+velocity all create 1000 12345 mom yes rot yes
 
-min_style cg
-minimize 0 1.0e-3 1000 1000
+# thermostat + barostat
+fix eq all npt temp 500 500 0.1 iso 0 0 0.1
 
-undump dump_relax
+thermo	250
 
-unfix box_relax
+dump	eq_dump all custom 250 dump.eq.dump  id type element xu yu zu c_my_virial[*]
+dump_modify eq_dump element Al Li
 
-write_data min_full.lammps-data
+run	1000
 
-fix fix_print all print 1 "$(pe)" file min_full.energy.dat
+unfix 	eq
+undump	eq_dump
+
+write_data eq.lammps-data
+
+fix fix_print all print 1 "$(pe)" file eq.energy.dat
 run 0
 unfix fix_print
 
@@ -52,10 +57,10 @@ print "-------------- MDMC mdmc ---------------------"
 
 reset_timestep	0
 timestep $(dt)
-fix AlLi  all atom/swap 100 100 1021 300 ke yes types 1 2
+fix AlLi  all atom/swap 100 100 1021 500 ke yes types 1 2
 
 # thermostat + barostat
-fix mdmc_npt all npt temp 300 300 0.1 aniso 0 0 0.1
+fix mdmc_npt all npt temp 500 500 0.1 aniso 0 0 0.1
 
 thermo_style custom step cpuremain temp pe fmax c_min_dist f_AlLi[2]  press vol density pxx pyy pzz pxy pxz pyz
 thermo	500
