@@ -378,6 +378,7 @@ submit to the queue or run as usual `gracemaker`
 ### 2.2. Save/Export Model
 
 To export the model into both TensorFlow's SavedModel and GRACE/FS YAML formats, run:  
+in the `2-HEA25S-GRACE-FS/1-fit` folder run
 
 ```bash
 gracemaker -r -s -sf
@@ -402,21 +403,34 @@ Please refer to the Jupyter notebook `2-HEA25S-GRACE-FS/HEA25-GRACE-FS.ipynb` fo
 
 #### 2.4.2. LAMMPS  
 
-You need to compile LAMMPS with GRACE/FS (see [here](../install/#lammps-with-grace) for instructions).  
+You need to compile LAMMPS with GRACE/FS and KOKKOS (see [here](../install/#lammps-with-grace) for instructions).  
 
+Go to the  `cd 3-lammps/grace-fs-with-extrapolation-grade/` and submit to the queue
 ```bash
-cd 3-lammps/grace-fs-with-extrapolation-grade/
-mpirun -np 2 /path/to/lmp -in in.lammps
+sbatch submit.sh  # for CPU
+sbatch submit_kk.sh  # for GPU/KOKKOS acceleration
 ```  
 
-In this simulation, the FCC(111) surface slab will be run under NPT conditions with an increasing temperature from 500K to 5000K. The extrapolation grade will be computed for each atom, and the configuration will be saved to `extrapolative_structures.dump` if the max gamma > 1.5.
+In the log.lammps.* files you can see
+
+for CPU:
+```
+Performance: 10.573 ns/day, 2.270 hours/ns, 122.376 timesteps/s, 4.895 katom-step/s
+```
+
+for GPU:
+```
+Performance: 42.786 ns/day, 0.561 hours/ns, 495.213 timesteps/s, 19.809 katom-step/s
+```
+
+In this simulation, the small FCC(111) surface slab will be run under NPT conditions with an increasing temperature from 500K to 5000K. The extrapolation grade will be computed for each atom, and the configuration will be saved to `extrapolative_structures.dump` if the max gamma > 1.5.
 
 To select the most representative structures for DFT calculations based on D-optimality, use the `pace_select` utility:  
 
 ```bash
-pace_select extrapolative_structures.dump  -p ../../1-fit/seed/1/FS_model.yaml -a ../../1-fit/seed/1/FS_model.asi -e "Au"
-```  
-
+pace_select extrapolative_structures.dump  -p ../../1-fit/seed/1/saved_model.yaml -a ../../1-fit/seed/1/saved_model.asi -e "Au"
+``` 
+This will generate selected.pkl.gz file with calculations needed to be performed with DFT.
 Find more details [here](https://pacemaker.readthedocs.io/en/latest/pacemaker/utilities/#d-optimality_structure_selection).
 
 ---
@@ -438,7 +452,7 @@ grace_models list
 To download a specific model, use:
 
 ```bash
-grace_models download MP_GRACE_1L_r6_4Nov2024
+grace_models download GRACE-1L-OMAT-medium-ft-E
 ```
 
 To download all models at once, use:
@@ -454,12 +468,13 @@ To load a model in ASE, use the following function:
 ```python
 from tensorpotential.calculator.foundation_models import grace_fm, GRACEModels
 
-calc = grace_fm("MP_GRACE_1L_r6_4Nov2024",
-                pad_atoms_number=2,
-                pad_neighbors_fraction=0.05, 
-                min_dist=0.5)
+calc = grace_fm("GRACE-1L-OMAT-medium-ft-E",
+                #pad_atoms_number=2,
+                #pad_neighbors_fraction=0.05, 
+                #min_dist=0.5
+                )
 # or 
-calc = grace_fm(GRACEModels.MP_GRACE_1L_r6_4Nov2024) # for better code completion
+calc = grace_fm(GRACEModels.GRACE_1L_OMAT_medium_ft_E) # for better code completion
 ```
 
 Note that the additional parameters are optional. Default values are provided for `pad_atoms_number` and `pad_neighbors_fraction`.
@@ -473,69 +488,43 @@ The usage of foundation models in LAMMPS is the same as for custom-parameterized
 * `3-foundation-models/2-lammps/1-Pt-surface`: Simulation of an oxygen molecule on a Pt (100) surface.
 * `3-foundation-models/2-lammps/2-ethanol-water`: Simulation of ethanol and water.
 
-**Note:** The currently available GRACE-1LAYER models do not support MPI parallelization. Updated models with MPI support will be released in the future.
-
+You can submit simulations jobs to the queue `sbatch submit.sh`
 ---
 
-## Tutorial 4: Fine-Tuning Foundation GRACE Models
 
-Fine-tuning foundation GRACE models can only be performed using checkpoints and not saved models.
-
-```yaml
-...
-
-potential:
-  finetune_foundation_model: GRACE-1L-OAM
-#  reduce_elements: True # select from original models only elements presented in the dataset  
-fit:
-
-  ### set small learning rate
-  opt_params: {learning_rate: 0.001,  ... }
-  
-  ### evaluate initial metrics
-  eval_init_stats: True
-  
-  # reset_optimizer: True
-  
-  ### specify trainable variables name pattern (depends on the model config)
-  # trainable_variable_names: ["rho/reducing_", "Z/ChemicalEmbedding"] 
-```
-
-If you want manually specify model and checkpoint, then
-
-```yaml
-potential:
-  filename: /path/to/model.yaml
-  checkpoint_name: /path/to/checkpoints/checkpoint.best_test_loss
-#  reduce_elements: True 
-```
+## Tutorial 4: Fine-Tuning and distillation of  Foundation GRACE Models
 
 
-### Finetuning and distillation
+### Finetuning  foundation model with a new dataset
 
-#### Finetuning  foundation model with a new dataset
-
-Run `gracemaker` with `-t` flag to start interactive dialogue and select the following options:
+Navigate `cd 3-foundation-models/3a-finetuning` and 
+run `gracemaker` with `-t` flag to start interactive dialogue and select the following options:
 
 ```bash
-╭──────────────────────────────╮
-│ GRACEmaker input.yaml wizard │
-╰─ navigate with arrow keys · ─╯
+
+
+── Fit type
+? Fit type: finetune foundation model
 
 ── Dataset
-? Training dataset file (e.g. data.pkl.gz): ../../1-AlLi-GRACE-2LAYER/0-data/collected.pkl.gz
+  Tab ↹ autocompletes path  ·  ↑↓ navigates history
+? Training dataset file (e.g. data.pkl.gz): ../../1-AlLi-GRACE-2LAYER/0-
+data/collected.pkl.gz
   ✓ Train file: ../../1-AlLi-GRACE-2LAYER/0-data/collected.pkl.gz
 ? Use a separate test dataset file? No
 ? Test set fraction (split from train) 0.05
   ✓ Test fraction: 0.05
 
-── Model
-? Finetune a foundation model? Yes
+── Model Details
 ? Model tier: 2L  — two message-passing layers (most accurate)
 ? Training dataset: OMAT  — OMat24 only (base / ft-E variants)
 ? Model size: medium    — larger capacity
 ? Fine-tuning variant: ft-E   — fine-tuned on energies
   ✓ Foundation model: GRACE-2L-OMAT-medium-ft-E
+
+── Optimizer
+? Optimizer: Adam
+  ✓ Optimizer: Adam
 
 ── Loss function
 ? Loss type: huber
@@ -549,8 +538,6 @@ Run `gracemaker` with `-t` flag to start interactive dialogue and select the fol
 ? Stress loss weight 128.0
   ✓ Stress weight: 128.0
 ? Switch E/F/S weights mid-training? Yes
-? Switch after (fraction 0-1, epoch number, or 'auto' = 0.75) 0.75
-? LR reduction factor at switch (new LR = current_LR × factor) 0.1
 ? Energy weight after switch (was 16) 128
 ? Force weight after switch (was 32) 32
 ? Stress weight after switch (was 128.0) 128.0
@@ -558,13 +545,13 @@ Run `gracemaker` with `-t` flag to start interactive dialogue and select the fol
 ── Weighting & batch size
 ? Sample weighting scheme: uniform
   ✓ Weighting: uniform
-? Batch size 8
-  ✓ Batch size: 8  (test: 32)
-
-
+? Batch size 16
+  ✓ Batch size: 16  (test: 64)
+? Target total updates 10000
+  ✓ Total updates: 10000
 ```
 
-After that, run `gracemaker` again in order to start the training or submit the job to the cluster.
+After that, submit the job to the cluster `sbatch submit.sh` or run `gracemaker`  locally.
 
 After the training is finished, you can find the final model in `seed/1/final_model` folder.
 If not, then you can export the model with `gracemarker -r -s` command to `seed/1/saved_model` folder.
