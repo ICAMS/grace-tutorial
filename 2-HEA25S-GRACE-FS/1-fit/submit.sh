@@ -7,6 +7,8 @@
 #SBATCH -J "HEA-FS"
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a100:1
+#SBATCH -A hpc-prf-mlpfits
+
 
 source /pc2/users/u/usrtr200/load_GRACE.sh 
 

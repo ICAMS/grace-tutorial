@@ -1,12 +1,13 @@
 #!/bin/bash
 #SBATCH -t 2:00:00
-#SBATCH -N 1
-#SBATCH -n 1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem-per-cpu 32GB
 #SBATCH -J "AlLi-2L"
-#SBATCH -p gpu
+#SBATCH -N 1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=32
 #SBATCH --gres=gpu:a100:1
+#SBATCH -p gpu
+#SBATCH -A hpc-prf-mlpfits
+
 
 source /pc2/users/u/usrtr200/load_GRACE.sh 
 
