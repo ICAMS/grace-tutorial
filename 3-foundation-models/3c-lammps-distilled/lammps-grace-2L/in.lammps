@@ -14,7 +14,7 @@ mass 2 6.94 # Li
 
 pair_style grace pair_forces
 
-pair_coeff      * * /home/users/lysogy36/PycharmProjects/GITHUB/grace-tutorial-fresh/3-foundation-models/3a-finetuning/seed/1/final_model Al Li
+pair_coeff      * * ../../3a-finetuning/seed/1/final_model/ Al Li
 
 neighbor	2.0 bin
 neigh_modify	delay 0 every 1 check yes

@@ -14,7 +14,7 @@ mass 2 6.94 # Li
 
 #---------------- FORCE FIELDS --------------------
 pair_style 	grace/fs extrapolation
-pair_coeff	* * /home/users/lysogy36/PycharmProjects/GITHUB/grace-tutorial-fresh/3-foundation-models/3b-distillation/seed/1/saved_model.yaml /home/users/lysogy36/PycharmProjects/GITHUB/grace-tutorial-fresh/3-foundation-models/3b-distillation/seed/1/saved_model.asi Al Li
+pair_coeff	* * ../../3b-distillation/seed/1/saved_model.yaml ../../3b-distillation/seed/1/saved_model.asi Al Li
 
 fix gamma all pair 50 grace/fs gamma 1
 compute max_gamma all reduce max f_gamma
