@@ -2,10 +2,7 @@
 
 ### Prerequisites  
 
-* **Operating System**: Linux or macOS (on macOS, you may need to install a custom `tensorflow`).  
-  * **Note for Windows**: GPU support is available only on WSL.  
-* **Hardware**: A GPU is highly recommended. Multicore CPUs are significantly slower but still functional.  
-* **Software**: `gracemaker` must be installed (see [Installation](../install)).  
+This tutorial is for MLPfits workshop, hosted in Noctua2 cluster of PC2 (Paderborn Center for Parallel Computing)
 
 ### Tutorial Materials  
 
@@ -17,18 +14,19 @@ git clone --depth=1 https://github.com/ICAMS/grace-tutorial
 
 ## Tutorial 1: Parameterization of 2-layer GRACE for Al-Li
 
-Working folder for this tutorial is `1-AlLi-GRACE-2LAYER`
-
-```bash
-cd 1-AlLi-GRACE-2LAYER
-```
 
 ### 1.1. Unpack and collect DFT data
 
+Unpack data:
+
 ```bash
-cd 0-data
-tar zxvf AlLi_vasp_data.tar.gz
-tar zxvf AlLi_Materials_Project.tar.gz
+sh unpack_data.sh
+```
+
+Working folder for this tutorial is `1-AlLi-GRACE-2LAYER`
+
+```bash
+cd 1-AlLi-GRACE-2LAYER/0-data
 ```
 
 Now, let's collect DFT data recursively, by running
@@ -50,12 +48,12 @@ cd ../1-fit
 gracemaker -t
 ```
 
-You have to enter following information:
 ```bash
 ── Fit type
 ? Fit type: fit from scratch
 
 ── Dataset
+  Tab ↹ autocompletes path  ·  ↑↓ navigates history
 ? Training dataset file (e.g. data.pkl.gz): ../0-data/collected.pkl.gz
   ✓ Train file: ../0-data/collected.pkl.gz
 ? Use a separate test dataset file? No
@@ -69,6 +67,10 @@ You have to enter following information:
   ✓ Complexity: small
 ? Cutoff radius (Å) 6
   ✓ Cutoff: 6.0 Å
+
+── Optimizer
+? Optimizer: Adam
+  ✓ Optimizer: Adam
 
 ── Loss function
 ? Loss type: huber
@@ -97,17 +99,14 @@ You have to enter following information:
 
 This will produce `input.yaml` file, which you can further check and tune.
 Please uncomment and set the line in order to reduce training time for this tutorial:
-```yaml
-fit:
-  target_total_updates: 5000
-```
+
 
 
 #### 1.2.2. Run gracemaker
 
 Now, you can  submit fitting job to the queue with 
 ```bash
-sbatch subnmit.sh
+sbatch submit.sh
 ```
 or run the model parameterization with:  
 
@@ -196,7 +195,7 @@ in order to compare the normal and chunked versions of the GRACE-2L models.
 ### Simulation Details  
 
 - The simulation will first run for **20 steps** to JIT-compile the model.  
-* Then, it will run for another **20 steps** to measure execution time.  
+- Then, it will run for another **20 steps** to measure execution time.  
 
 For example, on an A100 GPU, one of the final output lines might be:  
 
@@ -204,7 +203,7 @@ For example, on an A100 GPU, one of the final output lines might be:
 Loop time of 24.4206 on 1 procs for 20 steps with 108000 atoms
 ```  
 
-This indicates that the current model (GRACE-2LAYER, small) achieves a performance of approximately **11 mcs/atom**, supporting simulations with up to **100k atoms**.  
+This indicates that the current model (GRACE-2LAYER, small) achieves a performance of approximately **11 mcs/atom**, supporting simulations with up to **108k atoms**.  
 
 ---
 
@@ -253,6 +252,7 @@ You have to enter following information:
 ? Fit type: fit from scratch
 
 ── Dataset
+  Tab ↹ autocompletes path  ·  ↑↓ navigates history
 ? Training dataset file (e.g. data.pkl.gz): ../0-data/bulk_random_train.pkl.gz
   ✓ Train file: ../0-data/bulk_random_train.pkl.gz
 ? Use a separate test dataset file? No
@@ -266,6 +266,12 @@ You have to enter following information:
   ✓ Complexity: medium
 ? Cutoff radius (Å) 7
   ✓ Cutoff: 7.0 Å
+
+── Optimizer
+  → FS from scratch: BFGS (full Hessian) is recommended for small/medium models.
+  → If your FS model has many parameters (large lmax/order), prefer L-BFGS-B instead.
+? Optimizer: Adam
+  ✓ Optimizer: Adam
 
 ── Loss function
 ? Loss type: huber
@@ -286,8 +292,8 @@ You have to enter following information:
 ── Weighting & batch size
 ? Sample weighting scheme: uniform
   ✓ Weighting: uniform
-? Batch size 32
-  ✓ Batch size: 32  (test: 128)
+? Batch size 16
+  ✓ Batch size: 16  (test: 64)
 ? Target total updates 50000
   ✓ Total updates: 50000
 ```
@@ -314,15 +320,54 @@ If you prefer, you can [reduce](../faq/#how-to-reduce-tensorflow-verbosity-level
 
 In order to continue the fit with **new** parameters, for example, add more weight onto energy in the loss function, do following steps:
 
-* create new folder and copy `input.yaml` and `seed/1/checkpoints/*` from previous fit:
+* create new folder and run `gracemaker -t`:
 
-```bash
-cd ..
-mkdir -p 1b-continue-fit 
-cp 1-fit/input.yaml 1b-continue-fit/
-mkdir -p 1b-continue-fit/seed/1
-cp -r 1-fit/seed/1/checkpoints 1b-continue-fit/seed/1/
-cd 1b-continue-fit/
+```
+── Fit type
+? Fit type: continue fit
+
+── Dataset
+  Tab ↹ autocompletes path  ·  ↑↓ navigates history
+? Training dataset file (e.g. data.pkl.gz): ../1-fit/seed/1/training_set.pkl.gz
+  ✓ Train file: ../1-fit/seed/1/training_set.pkl.gz
+? Use a separate test dataset file? Yes
+? Test dataset file: ../1-fit/seed/1/test_set.pkl.gz
+  ✓ Test file: ../1-fit/seed/1/test_set.pkl.gz
+  ✓ Test fraction: 0.05
+
+── Model Details
+? Model config to continue from (e.g. model.yaml): ../1-fit/seed/1/model.yaml
+  ✓ Found 3 checkpoints in ../1-fit/seed/1/checkpoints
+? Which checkpoint to load? Auto (best test or latest)
+  → Auto-selected: checkpoint.best_test_loss
+  ✓ Previous model: ../1-fit/seed/1/model.yaml
+  ✓ Checkpoint: ../1-fit/seed/1/checkpoints/checkpoint.best_test_loss
+  → Note: reset_epoch_and_step is set to True (training will start from epoch 0)
+
+── Optimizer
+? Optimizer: Adam
+  ✓ Optimizer: Adam
+
+── Loss function
+? Loss type: huber
+  ✓ Loss type: huber
+? Huber delta 0.01
+? Energy loss weight 16
+  ✓ Energy weight: 16
+? Force loss weight 32
+  ✓ Force weight: 32
+? Include stress in the loss? Yes
+? Stress loss weight 128.0
+  ✓ Stress weight: 128.0
+? Switch E/F/S weights mid-training? No
+
+── Weighting & batch size
+? Sample weighting scheme: uniform
+  ✓ Weighting: uniform
+? Batch size 16
+  ✓ Batch size: 16  (test: 64)
+? Target total updates 10000
+  ✓ Total updates: 10000
 ```
 
 * in the `input.yaml` file find and change following parameters:
