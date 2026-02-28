@@ -690,7 +690,11 @@ compared with the original teacher.
 
 ## Tutorial 5. Learning vectorial/tensorial properties
 
-Navigate to the `4-fit-tensors/1-vector` directory and run `gracemaker -t`:
+This exercise demonstrates how to fit a model that predicts first‑rank
+tensorial quantities (vectors).
+
+Change into the `4-fit-tensors/1-vector` directory and launch the
+interactive setup:
 
 ```bash
 ── Dataset
@@ -735,7 +739,9 @@ ces)
 
 ```
 
-Then manually update the parameters in the `input.yaml` file to:
+After the wizard finishes, inspect the generated `input.yaml` and
+modify the optimizer block:
+
 ```yaml
 fit:
  #...
@@ -743,7 +749,11 @@ fit:
                weight_decay: null, clipnorm: 1.0}
 ```
 
-Next, submit the fit to the queue using `sbatch submit.sh`.
+Submit the job with `sbatch submit.sh` (or run locally with
+`gracemaker input.yaml`).
 
-After the fit is finished, you can use the model as shown in the `4-fit-tensors/1-vector/use_model.ipynb` notebook. There you can predict vectorial properties for test set structures and ensure rotational equivariance by randomly rotating the structures and predicted vectors.
-
+When training completes, open the notebook
+`4-fit-tensors/1-vector/use_model.ipynb`.  It contains examples of
+predicting vectorial properties on the test set and verifying rotational
+equivariance by applying random rotations to the structures and
+comparing the rotated outputs.
