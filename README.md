@@ -323,7 +323,7 @@ During the run, you may notice multiple warning messages starting with `ptxas wa
 
 If you prefer, you can [reduce](../faq/#how-to-reduce-tensorflow-verbosity-level) the verbosity level of TensorFlow to minimize these messages.  
 
-#### 2.1.3. (optional) Manual continuation of the fit with new loss function (TODO: update)
+#### 2.1.3. (optional) Manual continuation of the fit with new loss function
 
 To continue the fit with **new** parameters, for example, to add more weight to energy in the loss function, take the following steps:
 
