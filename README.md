@@ -653,23 +653,36 @@ pace_activeset saved_model.yaml -d training_set.pkl.gz
 
 For validation examples, see `3-foundation-models/3b-distillation/validate.ipynb`.
 
-Finally, we can use the distilled model for production simulations in LAMMPS.
-Pleae navigate to `3-foundation-models/3c-lammps-distilled`.
-Here you can find `prepare_lammps_input.ipynb` notebook to prepare LAMMPS input files, with Al FCC + 5 at% Li structure (500 atoms) being equilibrated and then MD-MC simulations with atomic swaps are performed at T=500K. 
-This will setup two simulations:
-* with teacher GRACE-2L model in `lammps-grace-2L` 
-* with distilled student GRACE-FS model in `lammps-grace-fs-dist`
+#### LAMMPS simulations
 
-You can run them in corresponding folders by submitting to the queue `sbatch submit.sh`.
-Note, that both simulations will be running on GPU: GRACE-2L with TensorFlow backend and 
-GRACE-FS with KOKKOS/GPU acceleration.
-During MC simulations, both models are speed up by using energy-only evaluation.
-Finally performance:
-* for `GRACE-FS` + KOKKOS/GPU:  20.302 ns/day, 1.182 hours/ns, 234.972 timesteps/s, 117.486 katom-step/s
-* for `GRACE-2L` + TensorFlow backend: 3.263 ns/day, 7.356 hours/ns, 37.762 timesteps/s, 18.881 katom-step/s.
+With the distilled model ready, you can perform production‑style molecular dynamics in LAMMPS.  Go to the
+`3-foundation-models/3c-lammps-distilled` directory and open
+`prepare_lammps_input.ipynb`.  The notebook shows how to generate
+input files for a 500‑atom Al‑FCC cell containing 5 at % Li.  After
+an initial equilibration the system is driven with MD‑MC moves (atomic
+swaps) at 500 K.
 
-So we get 6.5x acceleration due to distillation.
+Two separate simulation setups are provided:
 
+* `lammps-grace-2L` – uses the original teacher model (GRACE‑2L,
+  TensorFlow backend).
+* `lammps-grace-fs-dist` – uses the distilled student model
+  (GRACE‑FS, KOKKOS/GPU backend).
+
+Each folder includes its own `submit.sh` script; run the jobs by
+submitting the appropriate script to your queue.  Both calculations are
+configured to run on a GPU.  During the MC portion only energy
+evaluations are required, which further speeds the runs.
+
+Typical performance numbers obtained on our hardware (A100 40Gb) are:
+
+* **GRACE‑FS + KOKKOS/GPU:** 20.3 ns/day (1.18 h/ns),
+  234.97 tps, 117.49 katom‑step/s
+* **GRACE‑2L + TensorFlow:** 3.26 ns/day (7.36 h/ns),
+  37.76 tps, 18.88 katom‑step/s
+
+That corresponds to roughly a **6.5× speed‑up** for the distilled model
+compared with the original teacher.
 
 
 ---
@@ -732,5 +745,5 @@ fit:
 
 Next, submit the fit to the queue using `sbatch submit.sh`.
 
-After the fit is finished, you can use the model as shown in the `4-fit-tensors/1-vector/use_model.ipynb` notebook.
+After the fit is finished, you can use the model as shown in the `4-fit-tensors/1-vector/use_model.ipynb` notebook. There you can predict vectorial properties for test set structures and ensure rotational equivariance by randomly rotating the structures and predicted vectors.
 
