@@ -274,7 +274,8 @@ You have to enter following information:
 
 ── Optimizer
   → FS from scratch: BFGS (full Hessian) is recommended for small/medium models.
-  → If your FS model has many parameters (large lmax/order), prefer L-BFGS-B instead.
+  → If your FS model has many parameters (large lmax/order), prefer L-BFGS-B 
+instead.
 ? Optimizer: Adam
   ✓ Optimizer: Adam
 
