@@ -4,7 +4,7 @@
 #SBATCH -n 1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu 32GB
-#SBATCH -J "G2L-ft-lmp"
+#SBATCH -J "G2L-eth"
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a100:1
 #SBATCH -A hpc-prf-mlpfits
