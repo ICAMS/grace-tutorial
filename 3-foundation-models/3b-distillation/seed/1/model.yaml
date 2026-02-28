@@ -55,7 +55,7 @@ A:
     name: Z
   indicator_l_depend: false
   sum_neighbors: true
-  avg_n_neigh: 74.49594813614263
+  avg_n_neigh: 82.45076327671468
   lora_config: null
   lmax: null
   radial:
@@ -230,7 +230,7 @@ FSOut2ScalarTarget:
     name: atomic_energy
 ConstantScaleShiftTarget:
   __cls__: tensorpotential.instructions.output.ConstantScaleShiftTarget
-  scale: 1.289486680634186
+  scale: 13.159888102913484
   shift: 0
   atomic_shift_map: null
   chemical_embedding: null
