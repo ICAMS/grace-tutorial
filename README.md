@@ -567,18 +567,24 @@ Now you can use the fine-tuned model to generate distilled reference data.
 See `3-foundation-models/3b-distillation/distill_data.ipynb` for details.
 This will create a `distilled_AlLi_dataset.pkl.gz` file.
 
-### Training distilled model
+### Training a distilled model
 
-Run `gracemaker` with `-t` flag to start interactive dialogue and select the following options:
+To train a model on the distilled dataset, start `gracemaker` in interactive mode:
 
 ```bash
+gracemaker -t
+```
+
+Answer the prompts as follows:
+
+```bash
+
 ── Fit type
 ? Fit type: fit from scratch
 
 ── Dataset
   Tab ↹ autocompletes path  ·  ↑↓ navigates history
-? Training dataset file (e.g. data.pkl.gz): distilled_AlL
-i_dataset.pkl.gz
+? Training dataset file (e.g. data.pkl.gz): distilled_AlLi_dataset.pkl.gz
   ✓ Train file: distilled_AlLi_dataset.pkl.gz
 ? Use a separate test dataset file? No
 ? Test set fraction (split from train) 0.05
@@ -593,14 +599,10 @@ i_dataset.pkl.gz
   ✓ Cutoff: 7.0 Å
 
 ── Optimizer
-  → FS from scratch: BFGS (full Hessian) is recommended for small/medium
-models.
-  → If your FS model has many parameters (large lmax/order), prefer 
-L-BFGS-B instead.
-? Optimizer: BFGS
-  ✓ Optimizer: BFGS
-  → Note: BFGS stores the full Hessian approximation — use only for 
-small/medium FS models.
+  → FS from scratch: BFGS (full Hessian) is recommended for small/medium models.
+  → If your FS model has many parameters (large lmax/order), prefer L-BFGS-B instead.
+? Optimizer: Adam
+  ✓ Optimizer: Adam
 
 ── Loss function
 ? Loss type: huber
@@ -613,26 +615,62 @@ small/medium FS models.
 ? Include stress in the loss? Yes
 ? Stress loss weight 128.0
   ✓ Stress weight: 128.0
-  → Loss-weight switching not supported for quasi-Newton optimizers.
+? Switch E/F/S weights mid-training? Yes
+? Energy weight after switch (was 16) 128
+? Force weight after switch (was 32) 32
+? Stress weight after switch (was 128.0) 128.0
 
 ── Weighting & batch size
 ? Sample weighting scheme: uniform
   ✓ Weighting: uniform
-  → Batch size: less relevant for quasi-Newton (full dataset per step), 
-but must be specified.
 ? Batch size 16
-  ✓ Batch size: 32  (test: 128)
-? Max iterations (epochs) 250
-  ✓ Total updates: 250
 ```
 
-Now you can submit fit to the queue `sbatch submit.sh` or run the fit with `gracemaker input.yaml` locally.
+When the dialog finishes, an `input.yaml` file will be created; you can inspect and adjust it if needed.  Submit the fit by running
 
-After fit is finished, you can find the final model in `seed/1/final_model` folder.
-We also need to convert the model to GRACE/FS format. Go to `seed/1/` and run:
-`grace_utils -p model.yaml -c checkpoints/checkpoint.best_test_loss.index export -sf`.
-You will get the `saved_model.yaml` file.
-Then run `pace_activeset saved_model.yaml -d ../../distilled_AlLi_dataset.pkl.gz` to generate the active set.
+```bash
+sbatch submit.sh
+```
+
+or execute locally:
+
+```bash
+gracemaker input.yaml
+```
+
+Once training is complete the model will reside in `seed/1/final_model`.  You may also export a grace/fs YAML format with
+
+```bash
+gracemaker -r -s -sf
+```
+
+and then generate an active set:
+
+```bash
+cd seed/1
+pace_activeset saved_model.yaml -d training_set.pkl.gz
+```
+
+For validation examples, see `3-foundation-models/3b-distillation/validate.ipynb`.
+
+Finally, we can use the distilled model for production simulations in LAMMPS.
+Pleae navigate to `3-foundation-models/3c-lammps-distilled`.
+Here you can find `prepare_lammps_input.ipynb` notebook to prepare LAMMPS input files, with Al FCC + 5 at% Li structure (500 atoms) being equilibrated and then MD-MC simulations with atomic swaps are performed at T=500K. 
+This will setup two simulations:
+* with teacher GRACE-2L model in `lammps-grace-2L` 
+* with distilled student GRACE-FS model in `lammps-grace-fs-dist`
+
+You can run them in corresponding folders by submitting to the queue `sbatch submit.sh`.
+Note, that both simulations will be running on GPU: GRACE-2L with TensorFlow backend and 
+GRACE-FS with KOKKOS/GPU acceleration.
+During MC simulations, both models are speed up by using energy-only evaluation.
+Finally performance:
+* for `GRACE-FS` + KOKKOS/GPU:  20.302 ns/day, 1.182 hours/ns, 234.972 timesteps/s, 117.486 katom-step/s
+* for `GRACE-2L` + TensorFlow backend: 3.263 ns/day, 7.356 hours/ns, 37.762 timesteps/s, 18.881 katom-step/s.
+
+So we get 6.5x acceleration due to distillation.
+
+
 
 ---
 
