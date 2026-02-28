@@ -567,18 +567,24 @@ Now you can use the fine-tuned model to generate distilled reference data.
 See `3-foundation-models/3b-distillation/distill_data.ipynb` for details.
 This will create a `distilled_AlLi_dataset.pkl.gz` file.
 
-### Training distilled model
+### Training a distilled model
 
-Run `gracemaker` with `-t` flag to start interactive dialogue and select the following options:
+To train a model on the distilled dataset, start `gracemaker` in interactive mode:
 
 ```bash
+gracemaker -t
+```
+
+Answer the prompts as follows:
+
+```bash
+
 ── Fit type
 ? Fit type: fit from scratch
 
 ── Dataset
   Tab ↹ autocompletes path  ·  ↑↓ navigates history
-? Training dataset file (e.g. data.pkl.gz): distilled_AlL
-i_dataset.pkl.gz
+? Training dataset file (e.g. data.pkl.gz): distilled_AlLi_dataset.pkl.gz
   ✓ Train file: distilled_AlLi_dataset.pkl.gz
 ? Use a separate test dataset file? No
 ? Test set fraction (split from train) 0.05
@@ -593,14 +599,10 @@ i_dataset.pkl.gz
   ✓ Cutoff: 7.0 Å
 
 ── Optimizer
-  → FS from scratch: BFGS (full Hessian) is recommended for small/medium
-models.
-  → If your FS model has many parameters (large lmax/order), prefer 
-L-BFGS-B instead.
-? Optimizer: BFGS
-  ✓ Optimizer: BFGS
-  → Note: BFGS stores the full Hessian approximation — use only for 
-small/medium FS models.
+  → FS from scratch: BFGS (full Hessian) is recommended for small/medium models.
+  → If your FS model has many parameters (large lmax/order), prefer L-BFGS-B instead.
+? Optimizer: Adam
+  ✓ Optimizer: Adam
 
 ── Loss function
 ? Loss type: huber
@@ -613,33 +615,86 @@ small/medium FS models.
 ? Include stress in the loss? Yes
 ? Stress loss weight 128.0
   ✓ Stress weight: 128.0
-  → Loss-weight switching not supported for quasi-Newton optimizers.
+? Switch E/F/S weights mid-training? Yes
+? Energy weight after switch (was 16) 128
+? Force weight after switch (was 32) 32
+? Stress weight after switch (was 128.0) 128.0
 
 ── Weighting & batch size
 ? Sample weighting scheme: uniform
   ✓ Weighting: uniform
-  → Batch size: less relevant for quasi-Newton (full dataset per step), 
-but must be specified.
 ? Batch size 16
-  ✓ Batch size: 32  (test: 128)
-? Max iterations (epochs) 250
-  ✓ Total updates: 250
 ```
 
-Now you can submit fit to the queue `sbatch submit.sh` or run the fit with `gracemaker input.yaml` locally.
+When the dialog finishes, an `input.yaml` file will be created; you can inspect and adjust it if needed.  Submit the fit by running
 
-After fit is finished, you can find the final model in `seed/1/final_model` folder.
-We also need to convert the model to GRACE/FS format. Go to `seed/1/` and run:
-`grace_utils -p model.yaml -c checkpoints/checkpoint.best_test_loss.index export -sf`.
-You will get the `saved_model.yaml` file.
-Then run `pace_activeset saved_model.yaml -d ../../distilled_AlLi_dataset.pkl.gz` to generate the active set.
+```bash
+sbatch submit.sh
+```
+
+or execute locally:
+
+```bash
+gracemaker input.yaml
+```
+
+Once training is complete the model will reside in `seed/1/final_model`.  You may also export a grace/fs YAML format with
+
+```bash
+gracemaker -r -s -sf
+```
+
+and then generate an active set:
+
+```bash
+cd seed/1
+pace_activeset saved_model.yaml -d training_set.pkl.gz
+```
+
+For validation examples, see `3-foundation-models/3b-distillation/validate.ipynb`.
+
+#### LAMMPS simulations
+
+With the distilled model ready, you can perform production‑style molecular dynamics in LAMMPS.  Go to the
+`3-foundation-models/3c-lammps-distilled` directory and open
+`prepare_lammps_input.ipynb`.  The notebook shows how to generate
+input files for a 500‑atom Al‑FCC cell containing 5 at % Li.  After
+an initial equilibration the system is driven with MD‑MC moves (atomic
+swaps) at 500 K.
+
+Two separate simulation setups are provided:
+
+* `lammps-grace-2L` – uses the original teacher model (GRACE‑2L,
+  TensorFlow backend).
+* `lammps-grace-fs-dist` – uses the distilled student model
+  (GRACE‑FS, KOKKOS/GPU backend).
+
+Each folder includes its own `submit.sh` script; run the jobs by
+submitting the appropriate script to your queue.  Both calculations are
+configured to run on a GPU.  During the MC portion only energy
+evaluations are required, which further speeds the runs.
+
+Typical performance numbers obtained on our hardware (A100 40Gb) are:
+
+* **GRACE‑FS + KOKKOS/GPU:** 20.3 ns/day (1.18 h/ns),
+  234.97 tps, 117.49 katom‑step/s
+* **GRACE‑2L + TensorFlow:** 3.26 ns/day (7.36 h/ns),
+  37.76 tps, 18.88 katom‑step/s
+
+That corresponds to roughly a **6.5× speed‑up** for the distilled model
+compared with the original teacher.
+
 
 ---
 
 
 ## Tutorial 5. Learning vectorial/tensorial properties
 
-Navigate to the `4-fit-tensors/1-vector` directory and run `gracemaker -t`:
+This exercise demonstrates how to fit a model that predicts first‑rank
+tensorial quantities (vectors).
+
+Change into the `4-fit-tensors/1-vector` directory and launch the
+interactive setup:
 
 ```bash
 ── Dataset
@@ -684,7 +739,9 @@ ces)
 
 ```
 
-Then manually update the parameters in the `input.yaml` file to:
+After the wizard finishes, inspect the generated `input.yaml` and
+modify the optimizer block:
+
 ```yaml
 fit:
  #...
@@ -692,7 +749,11 @@ fit:
                weight_decay: null, clipnorm: 1.0}
 ```
 
-Next, submit the fit to the queue using `sbatch submit.sh`.
+Submit the job with `sbatch submit.sh` (or run locally with
+`gracemaker input.yaml`).
 
-After the fit is finished, you can use the model as shown in the `4-fit-tensors/1-vector/use_model.ipynb` notebook.
-
+When training completes, open the notebook
+`4-fit-tensors/1-vector/use_model.ipynb`.  It contains examples of
+predicting vectorial properties on the test set and verifying rotational
+equivariance by applying random rotations to the structures and
+comparing the rotated outputs.
