@@ -1,16 +1,14 @@
 # Tutorials  
 
-### Prerequisites  
-
 This tutorial is for the MLPfits workshop, hosted on the Noctua2 cluster of PC2 (Paderborn Center for Parallel Computing)
 
-### Tutorial Materials  
+### Tutorial Materials
 
-All materials for these tutorials are available on [GitHub](https://github.com/ICAMS/grace-tutorial). Clone the repository with:  
+All materials for these tutorials are available on [GitHub](https://github.com/ICAMS/grace-tutorial). Clone the repository with:
 
 ```bash
 git clone --depth=1 https://github.com/ICAMS/grace-tutorial
-```  
+```
 
 In order to activate GRACE environment do
 ```bash
@@ -104,29 +102,26 @@ gracemaker -t
 ```
 
 This will produce `input.yaml` file, which you can further check and tune.
-Please uncomment and set the line in order to reduce training time for this tutorial:
-
-
 
 #### 1.2.2. Run gracemaker
 
-Now you can submit the fitting job to the queue with 
+Now you can submit the fitting job to the queue with
 ```bash
 sbatch submit.sh
 ```
-or run the model parameterization with:  
+or run the model parameterization with:
 
 ```bash
 gracemaker
-```  
+```
 
-During this process:  
-* **Preprocessing and Data Preparation**: Tasks such as building neighbor lists will be performed.  
-* **JIT Compilation**: The first epoch may take additional time due to JIT compilation for each training and testing bucket.  
+During this process:
+* **Preprocessing and Data Preparation**: Tasks such as building neighbor lists will be performed.
+* **JIT Compilation**: The first epoch may take additional time due to JIT compilation for each training and testing bucket.
 
-If you do not wish to wait, you can manually terminate the process: `Ctrl+Z` and `kill %1`  
+If you do not wish to wait, you can manually terminate the process: `Ctrl+Z` and `kill %1`
 
-To create multiple models for an ensemble, run additional parameterizations with different seeds:  
+To create multiple models for an ensemble, run additional parameterizations with different seeds:
 
 ```bash
 sbatch submit-seed-2.sh
@@ -136,7 +131,7 @@ Or for local runs:
 ```bash
 gracemaker --seed 2
 gracemaker --seed 3
-```  
+```
 
 #### 1.2.3. Analyze learning curves
 
@@ -147,7 +142,7 @@ Check `1-AlLi-GRACE-2LAYER/1-fit/visualize_metrics.ipynb` Jupyter notebook to an
 In order to export the model into TensorFlow's SavedModel format, do
 
 ```bash
-gracemaker -r -s 
+gracemaker -r -s
 ```
 
 Check [here](../quickstart/#tensorflows-savedmodel) for more details.
@@ -167,18 +162,18 @@ To use the GRACE potential in SavedModel format, apply the following pair_style:
 ```bash
 pair_style grace pad_verbose
 pair_coeff * * ../1-fit/seed/1/saved_model/ Al
-```  
+```
 By default, this `pair_style` attempts to process the entire structure at once. However, for very large systems, this may result in out-of-memory (OOM) errors.
 
 To prevent this, you can use the "chunked" versions of GRACE: `grace/1layer/chunk` or `grace/2layer/chunk`. These options process the structure in fixed-size pieces (chunks) that can be tuned to fit your GPU memory:
 
 ```bash
-pair_style grace/2layer/chunk chunksize 4096 
+pair_style grace/2layer/chunk chunksize 4096
 pair_coeff * * ../1-fit/seed/1/saved_model/ Al
 ```
 
-The `pad_verbose` option provides detailed information about padding during the simulation.  
-  
+The `pad_verbose` option provides detailed information about padding during the simulation.
+
 
 Submit the LAMMPS calculations to the queue:
 ```bash
@@ -197,18 +192,18 @@ lmp -in in.lammps.chunked
 
 to compare the normal and chunked versions of the GRACE-2L models.
 
-### Simulation Details  
+### Simulation Details
 
-- The simulation will first run for **20 steps** to JIT-compile the model.  
-- Then it will run for another **20 steps** to measure execution time.  
+- The simulation will first run for **20 steps** to JIT-compile the model.
+- Then it will run for another **20 steps** to measure execution time.
 
-For example, on an A100 GPU, one of the final output lines might be:  
+For example, on an A100 GPU, one of the final output lines might be:
 
 ```
 Loop time of 24.4206 on 1 procs for 20 steps with 108000 atoms
-```  
+```
 
-This indicates that the current model (GRACE-2LAYER, small) achieves a performance of approximately **11 mcs/atom**, supporting simulations with up to **108k atoms**.  
+This indicates that the current model (GRACE-2LAYER, small) achieves a performance of approximately **11 mcs/atom**, supporting simulations with up to **108k atoms**.
 
 ---
 
@@ -246,7 +241,7 @@ The same procedure can be repeated for other files.
 Go to `1-fit` folder and run `gracemaker -t` for interactive dialogue:
 
 ```bash
-cd 1-fit 
+cd 1-fit
 gracemaker -t
 ```
 
@@ -274,7 +269,7 @@ You have to enter following information:
 
 ── Optimizer
   → FS from scratch: BFGS (full Hessian) is recommended for small/medium models.
-  → If your FS model has many parameters (large lmax/order), prefer L-BFGS-B 
+  → If your FS model has many parameters (large lmax/order), prefer L-BFGS-B
 instead.
 ? Optimizer: Adam
   ✓ Optimizer: Adam
@@ -317,11 +312,11 @@ Or run locally:
 
 ```bash
 gracemaker input.yaml
-```  
+```
 
-During the run, you may notice multiple warning messages starting with `ptxas warning:` or similar. These messages indicate that JIT compilation is occurring for each training and testing bucket, and they are normal. They will disappear after the first iteration or epoch.  
+During the run, you may notice multiple warning messages starting with `ptxas warning:` or similar. These messages indicate that JIT compilation is occurring for each training and testing bucket, and they are normal. They will disappear after the first iteration or epoch.
 
-If you prefer, you can [reduce](../faq/#how-to-reduce-tensorflow-verbosity-level) the verbosity level of TensorFlow to minimize these messages.  
+If you prefer, you can [reduce](../faq/#how-to-reduce-tensorflow-verbosity-level) the verbosity level of TensorFlow to minimize these messages.
 
 #### 2.1.3. (optional) Manual continuation of the fit with new loss function
 
@@ -379,7 +374,7 @@ To continue the fit with **new** parameters, for example, to add more weight to 
 
 submit to the queue or run as usual with `gracemaker`.
 
-**Note**: You can switch energy/forces/stress weights in the loss function during a single `gracemaker` run. To do this, you need to manually provide the `input.yaml::fit::loss::switch` option (see [here](../inputfile/#input-file-inputyaml) for more details) or provide a non-empty answer to the `Switch loss function E:F:S...` question in the `gracemaker -t` dialog. 
+**Note**: You can switch energy/forces/stress weights in the loss function during a single `gracemaker` run. To do this, you need to manually provide the `input.yaml::fit::loss::switch` option (see [here](../inputfile/#input-file-inputyaml) for more details) or provide a non-empty answer to the `Switch loss function E:F:S...` question in the `gracemaker -t` dialog.
 
 ### 2.2. Save/Export Model
 
@@ -387,13 +382,13 @@ To export the model into both TensorFlow's SavedModel and GRACE/FS YAML formats,
 
 ```bash
 gracemaker -r -s -sf
-```  
+```
 
 For more details, check [here](../quickstart/#gracefs).
 
 ### 2.3. Active Set Construction
 
-To construct the active set (ASI) for uncertainty indication, run the following commands (more details [here](../quickstart/#build-active-set-for-gracefs-only)):  
+To construct the active set (ASI) for uncertainty indication, run the following commands (more details [here](../quickstart/#build-active-set-for-gracefs-only)):
 
 ```bash
 cd seed/1
@@ -402,19 +397,19 @@ pace_activeset -d training_set.pkl.gz saved_model.yaml
 
 ### 2.4. Usage of the Model
 
-#### 2.4.1. Python/ASE  
+#### 2.4.1. Python/ASE
 
 Please refer to the Jupyter notebook `2-HEA25S-GRACE-FS/HEA25-GRACE-FS.ipynb` for usage details.
 
-#### 2.4.2. LAMMPS  
+#### 2.4.2. LAMMPS
 
-You need to compile LAMMPS with GRACE/FS and KOKKOS (see [here](../install/#lammps-with-grace) for instructions).  
+You need to compile LAMMPS with GRACE/FS and KOKKOS (see [here](../install/#lammps-with-grace) for instructions).
 
 Navigate to `3-lammps/grace-fs-with-extrapolation-grade/` and submit to the queue:
 ```bash
 sbatch submit.sh  # for CPU
 sbatch submit_kk.sh  # for GPU/KOKKOS acceleration
-```  
+```
 
 In the log.lammps.* files you can see
 
@@ -430,11 +425,11 @@ Performance: 42.786 ns/day, 0.561 hours/ns, 495.213 timesteps/s, 19.809 katom-st
 
 In this simulation, a small FCC(111) surface slab runs under NPT conditions with an increasing temperature from 500K to 5000K. The extrapolation grade is computed for each atom, and the configuration is saved to `extrapolative_structures.dump` if the maximum gamma > 1.5.
 
-To select the most representative structures for DFT calculations based on D-optimality, use the `pace_select` utility:  
+To select the most representative structures for DFT calculations based on D-optimality, use the `pace_select` utility:
 
 ```bash
 pace_select extrapolative_structures.dump  -p ../../1-fit/seed/1/saved_model.yaml -a ../../1-fit/seed/1/saved_model.asi -e "Au"
-``` 
+```
 This will generate a `selected.pkl.gz` file with calculations that need to be performed with DFT.
 Find more details [here](https://pacemaker.readthedocs.io/en/latest/pacemaker/utilities/#d-optimality_structure_selection).
 
@@ -475,10 +470,10 @@ from tensorpotential.calculator.foundation_models import grace_fm, GRACEModels
 
 calc = grace_fm("GRACE-1L-OMAT-medium-ft-E",
                 #pad_atoms_number=2,
-                #pad_neighbors_fraction=0.05, 
+                #pad_neighbors_fraction=0.05,
                 #min_dist=0.5
                 )
-# or 
+# or
 calc = grace_fm(GRACEModels.GRACE_1L_OMAT_medium_ft_E) # for better code completion
 ```
 
@@ -502,7 +497,7 @@ You can submit simulation jobs to the queue with `sbatch submit.sh`
 
 ### Finetuning foundation models with a new dataset
 
-Navigate to `3-foundation-models/3a-finetuning` and 
+Navigate to `3-foundation-models/3a-finetuning` and
 run `gracemaker` with the `-t` flag to start an interactive dialogue and select the following options:
 
 ```bash
