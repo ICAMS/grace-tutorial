@@ -18,5 +18,4 @@ echo "CUDA devices: $CUDA_VISIBLE_DEVICES"
 nvidia-smi
 
 # Run your application here.
-# Below is an example to run the "Hello World" program with LIKWID.
 gracemaker --seed 2
