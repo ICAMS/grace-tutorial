@@ -8,3 +8,8 @@ parallel_communication:
     shape:
     - 32
     - 4
+  I_nl_LN:
+    non_local: false
+    shape:
+    - 17
+    - 1
